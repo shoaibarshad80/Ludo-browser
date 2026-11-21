@@ -24,6 +24,7 @@ import {
   TRACK,
   YARD_BASE,
   YARD_SLOTS,
+  stackPawnSize,
   tokenScreenPos,
 } from '@/lib/ludo/board'
 import { legalMoves } from '@/lib/ludo/engine'
@@ -131,16 +132,19 @@ export default function Board({
     return list
   }, [])
 
-  // gather tokens grouped by cell for stacking
+  // gather tokens grouped by cell for stacking — BOTH the shared track
+  // and each color's home lane (two own pawns can share a home cell)
   const tokensByCell = useMemo(() => {
-    const map = new Map<string, Array<{ color: Color; id: number }>>()
+    const map = new Map<string, Array<{ color: Color; id: number; step: number }>>()
+    const push = (key: string, entry: { color: Color; id: number; step: number }) => {
+      const arr = map.get(key) ?? []
+      arr.push(entry)
+      map.set(key, arr)
+    }
     for (const p of game.players) {
       for (const t of p.tokens) {
-        if (t.location !== 'track') continue
-        const key = `trk${t.trackIdx}`
-        const arr = map.get(key) ?? []
-        arr.push({ color: p.color, id: t.id })
-        map.set(key, arr)
+        if (t.location === 'track') push(`trk${t.trackIdx}`, { color: p.color, id: t.id, step: 0 })
+        else if (t.location === 'home') push(`hm-${p.color}-${t.homeStep}`, { color: p.color, id: t.id, step: t.homeStep })
       }
     }
     return map
@@ -418,10 +422,12 @@ export default function Board({
             p.tokens
               .filter((t) => t.location === 'track' || t.location === 'home')
               .map((t) => {
-                const stack = t.location === 'track' ? (tokensByCell.get(`trk${t.trackIdx}`) ?? []) : []
+                const cellKey = t.location === 'track' ? `trk${t.trackIdx}` : t.location === 'home' ? `hm-${p.color}-${t.homeStep}` : null
+                const stack = cellKey ? (tokensByCell.get(cellKey) ?? []) : []
                 const stackIndex = stack.findIndex((x) => x.color === p.color && x.id === t.id)
                 const pos = tokenScreenPos(p.color, t.id, t.location, t.trackIdx, t.homeStep, stackIndex, stack.length)
-                const w = 0.96
+                // crowded cell → every pawn shrinks so the fan stays readable
+                const w = stackPawnSize(stack.length)
                 const isGlowing = glow(p.color, t.id)
                 // lift the token whose position just changed (movement emphasis)
                 const tKey = `${p.color}-${t.id}`
@@ -439,7 +445,7 @@ export default function Board({
                       top: `calc(${pos.y}% - ${(w / 2 / BOARD_SIZE) * 100}%)`,
                       width: pct(w),
                       height: pct(w),
-                      zIndex: hopping ? 30 : isGlowing ? 25 : 15,
+                      zIndex: hopping ? 30 : isGlowing ? 25 : 15 + Math.max(0, stackIndex),
                       transition: 'left 300ms cubic-bezier(0.4, 0, 0.2, 1), top 300ms cubic-bezier(0.4, 0, 0.2, 1)',
                       willChange: 'transform',
                     }}

@@ -100,6 +100,34 @@ export const FINISH_SLOTS: Record<Color, Array<{ r: number; c: number }>> = {
   ].reverse(),
 }
 
+/**
+ * Visual pawn size (cell units) for a cell holding `n` stacked tokens.
+ * Fewer tokens → full-size pawns; crowded cells shrink every pawn so
+ * the fan stays readable and nothing hides its neighbours.
+ */
+export function stackPawnSize(n: number): number {
+  if (n >= 5) return 0.55
+  if (n === 4) return 0.68
+  if (n === 3) return 0.75
+  if (n === 2) return 0.85
+  return 0.96
+}
+
+/**
+ * Direction of travel on the cell a stack occupies: 'h' = lane runs
+ * left→right, 'v' = lane runs top→bottom. Stacks fan out ALONG the
+ * lane (pairs stand side-by-side, exactly like Ludo Star).
+ */
+function laneAxis(location: string, color: Color, trackIdx: number, homeStep: number): 'h' | 'v' {
+  if (location === 'home') {
+    return color === 'red' || color === 'yellow' ? 'h' : 'v'
+  }
+  const idx = ((trackIdx % 52) + 52) % 52
+  const prev = TRACK[(idx + 51) % 52]
+  const cur = TRACK[idx]
+  return prev.r === cur.r ? 'h' : 'v'
+}
+
 /** Convert a track index into the absolute index for a color. */
 export function trackIdxFor(color: Color, progressFromStart: number): number {
   return (START_IDX[color] + progressFromStart) % 52
@@ -133,16 +161,37 @@ export function tokenScreenPos(
     const slot = slots[tokenId % slots.length]
     pos = slot
   }
-  // stacking offset: fan out tokens sharing one cell
-  if (stackSize > 1 && location === 'track') {
+  // stacking offset: fan tokens sharing one cell ALONG the lane so
+  // every pawn keeps clear space around it (Ludo Star pairing).
+  //   2 → side-by-side pair   3 → triangle   4 → 2x2 grid   5+ → ring
+  if (stackSize > 1 && (location === 'track' || location === 'home')) {
     const i = Math.max(0, stackIndex)
     const n = stackSize
+    const axis = laneAxis(location, color, trackIdx, homeStep)
+    // unit offsets in (primary=lane direction, secondary=cross direction)
+    let dp = 0
+    let ds = 0
     if (n === 2) {
-      pos = { r: pos.r + (i === 0 ? -0.16 : 0.16), c: pos.c + (i === 0 ? -0.16 : 0.16) }
+      dp = i === 0 ? -0.215 : 0.215
+    } else if (n === 3) {
+      // triangle: two along the lane, one centered behind
+      if (i === 0) dp = -0.26
+      else if (i === 1) dp = 0.26
+      else ds = 0.28
+    } else if (n === 4) {
+      const x = i % 2
+      const y = i < 2 ? 0 : 1
+      dp = x === 0 ? -0.19 : 0.19
+      ds = y === 0 ? -0.19 : 0.19
     } else {
       const angle = (i / n) * Math.PI * 2
-      pos = { r: pos.r + 0.18 * Math.sin(angle), c: pos.c + 0.18 * Math.cos(angle) }
+      dp = 0.3 * Math.cos(angle)
+      ds = 0.3 * Math.sin(angle)
     }
+    pos =
+      axis === 'h'
+        ? { r: pos.r + ds, c: pos.c + dp }
+        : { r: pos.r + dp, c: pos.c + ds }
   }
   return {
     x: ((pos.c + 0) / BOARD_SIZE) * 100,
