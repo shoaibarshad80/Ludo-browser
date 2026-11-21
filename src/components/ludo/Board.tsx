@@ -54,6 +54,9 @@ const pct = (v: number) => `${(v / BOARD_SIZE) * 100}%`
 /** how long a moved token keeps its "lift" movement emphasis (ms) */
 const HOP_MS = 520
 
+/** spring for the token glide — 95ms step targets blend into one fluid motion */
+const GLIDE = { type: 'spring' as const, stiffness: 620, damping: 38, mass: 0.62 }
+
 /** where quick-chat speech pills hover, per corner (toward the board center) */
 const TEXT_PILL_POS: Record<Color, { c: number; r: number }> = {
   red: { c: 4.5, r: 4.3 },
@@ -264,6 +267,9 @@ export default function Board({
             '0 26px 60px rgba(2,6,18,0.75), 0 0 46px rgba(59,130,246,0.20), inset 0 2px 0 rgba(147,197,253,0.32), inset 0 -5px 12px rgba(0,0,0,0.45), inset 3px 0 8px rgba(147,197,253,0.10), inset -3px 0 8px rgba(0,0,0,0.30)',
         }}
       />
+      {/* traveling gold light sweeping ONLY across the outer frame ring
+          (later layers paint over the center, leaving just the rim lit) */}
+      <div className="ls-frame-sheen pointer-events-none absolute inset-0 rounded-[6%]" />
       {/* frame gloss sweep */}
       <div
         className="pointer-events-none absolute inset-0 rounded-[6%]"
@@ -285,6 +291,25 @@ export default function Board({
           background: 'linear-gradient(115deg, rgba(255,255,255,0.5) 2%, transparent 26%, transparent 78%, rgba(255,246,200,0.35) 98%)',
         }}
       />
+      {/* gold corner studs — riveted royal table look */}
+      {[
+        { left: '2.6%', top: '2.6%' },
+        { right: '2.6%', top: '2.6%' },
+        { left: '2.6%', bottom: '2.6%' },
+        { right: '2.6%', bottom: '2.6%' },
+      ].map((pos, i) => (
+        <span
+          key={`stud-${i}`}
+          aria-hidden
+          className="pointer-events-none absolute z-[3] h-[4.6%] w-[4.6%] rounded-full"
+          style={{
+            ...pos,
+            background: 'radial-gradient(circle at 34% 28%, #fff7d9 0%, #f2c351 42%, #b9851f 74%, #7a5210 100%)',
+            boxShadow:
+              'inset 0 -1.5px 2.5px rgba(90,50,0,0.6), inset 0 1.5px 1.5px rgba(255,255,255,0.85), 0 1.5px 4px rgba(0,0,0,0.45)',
+          }}
+        />
+      ))}
       {/* dark well between trim and interior — adds height/depth */}
       <div
         className="absolute inset-[2.9%] rounded-[4.5%]"
@@ -298,6 +323,11 @@ export default function Board({
         className="absolute inset-[3.4%] overflow-hidden rounded-[4%]"
         style={{ background: '#f2f4ff', boxShadow: 'inset 0 6px 16px rgba(8,12,40,0.30), inset 0 -5px 12px rgba(8,12,40,0.22)' }}
       >
+        {/* fine linen weave texture over the interior (under all pieces) */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{ background: 'repeating-linear-gradient(45deg, rgba(93,106,180,0.05) 0 2px, transparent 2px 8px)' }}
+        />
         <div
           className="relative h-full w-full"
           style={{ transform: `rotate(${rotate}deg)` }}
@@ -338,10 +368,18 @@ export default function Board({
                   borderRadius: '9%',
                   filter: active ? undefined : 'grayscale(0.92) brightness(0.72) opacity(0.5)',
                   boxShadow: isTurn
-                    ? `inset 0 0 0 3px rgba(255,255,255,0.95), 0 0 26px 6px ${c.glow}`
-                    : 'inset 0 -6px 12px rgba(0,0,0,0.28), inset 0 2px 0 rgba(255,255,255,0.35)',
+                    ? `inset 0 0 0 3px rgba(255,255,255,0.95), inset 0 0 0 5.5px rgba(246,196,83,0.55), 0 0 26px 6px ${c.glow}`
+                    : 'inset 0 0 0 2px rgba(246,196,83,0.42), inset 0 -6px 12px rgba(0,0,0,0.28), inset 0 2px 0 rgba(255,255,255,0.35)',
                 }}
               >
+                {/* glossy diagonal sheen (glass cover over the yard) */}
+                <div
+                  className="pointer-events-none absolute inset-0 rounded-[9%]"
+                  style={{
+                    background:
+                      'linear-gradient(125deg, rgba(255,255,255,0.34) 0%, rgba(255,255,255,0.10) 30%, transparent 52%, rgba(255,255,255,0.16) 100%)',
+                  }}
+                />
                 {/* glossy white slot panel */}
                 <div
                   className="absolute rounded-[10%]"
@@ -451,7 +489,8 @@ export default function Board({
               <polygon points="90,0 45,45 90,90" fill="rgba(255,255,255,0.08)" />
               <polygon points="0,90 45,45 90,90" fill="rgba(0,0,0,0.12)" />
               <polygon points="90,0 45,45 90,90" fill="rgba(0,0,0,0.06)" />
-              {/* medallion: dark seat → gold bevel ring → cream core → star */}
+              {/* medallion: gold halo ring → dark seat → gold bevel ring → cream core → star */}
+              <circle cx="45" cy="45" r="16.6" fill="none" stroke="#e9b53e" strokeWidth="1.7" opacity="0.9" />
               <circle cx="45" cy="45" r="15" fill="#8a5c10" />
               <circle cx="45" cy="45" r="13.4" fill="url(#ls-med-ring)" />
               <circle cx="45" cy="45" r="10" fill="url(#ls-med-core)" stroke="#d9a636" strokeWidth="1.4" />
@@ -491,9 +530,12 @@ export default function Board({
               })
           )}
 
-          {/* tokens on track + home lane — smooth glide between cells.
-              A token whose cell just changed gets a temporary "lift"
-              (scale + colored glow) so every move reads clearly. */}
+          {/* tokens on track + home lane — GPU-composited glide.
+              Position animates via transform (x/y in % of the token box)
+              with a spring, so the 95ms step targets from the store blend
+              into ONE fluid motion instead of left/top layout transitions.
+              A token whose cell just changed also gets a temporary
+              "lift" (scale + colored glow). */}
           {game.players.map((p) =>
             p.tokens
               .filter((t) => t.location === 'track' || t.location === 'home')
@@ -512,21 +554,33 @@ export default function Board({
                 if (prevKey && prevKey !== posKey) hopUntilRef.current.set(tKey, Date.now() + HOP_MS)
                 prevPosRef.current.set(tKey, posKey)
                 const hopping = (hopUntilRef.current.get(tKey) ?? 0) > Date.now()
+                // transform target in % of the token's own size so its
+                // CENTER lands on pos (x% of board = x*BOARD_SIZE/w % of box)
+                const xPct = (pos.x * BOARD_SIZE) / w - 50
+                const yPct = (pos.y * BOARD_SIZE) / w - 50
                 return (
                   <motion.div
                     key={`m-${p.color}-${t.id}`}
-                    className="absolute"
+                    className="absolute left-0 top-0"
                     style={{
-                      left: `calc(${pos.x}% - ${(w / 2 / BOARD_SIZE) * 100}%)`,
-                      top: `calc(${pos.y}% - ${(w / 2 / BOARD_SIZE) * 100}%)`,
                       width: pct(w),
                       height: pct(w),
                       zIndex: hopping ? 30 : isGlowing ? 25 : 15 + Math.max(0, stackIndex),
-                      transition: 'left 300ms cubic-bezier(0.4, 0, 0.2, 1), top 300ms cubic-bezier(0.4, 0, 0.2, 1)',
                       willChange: 'transform',
                     }}
-                    animate={{ scale: hopping ? 1.28 : 1 }}
-                    transition={{ type: 'spring', stiffness: 330, damping: hopping ? 14 : 20 }}
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{
+                      x: `${xPct}%`,
+                      y: `${yPct}%`,
+                      scale: hopping ? 1.26 : 1,
+                      opacity: 1,
+                    }}
+                    transition={{
+                      x: GLIDE,
+                      y: GLIDE,
+                      scale: { type: 'spring', stiffness: 400, damping: hopping ? 13 : 21, mass: 0.5 },
+                      opacity: { duration: 0.18, ease: 'easeOut' },
+                    }}
                   >
                     <Pawn3D
                       color={p.color}

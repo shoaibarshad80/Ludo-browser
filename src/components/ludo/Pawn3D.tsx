@@ -97,7 +97,7 @@ export default function Pawn3D({ color, glow, tap, onClick, tokenId, uid, uprigh
   const g = (name: string) => `${name}-${uid}`
 
   const svg = (
-    <svg viewBox="0 0 64 64" className="h-full w-full overflow-visible">
+    <svg viewBox="0 0 64 64" className="h-full w-full overflow-visible" style={{ filter: 'drop-shadow(0 1.5px 1.5px rgba(8,10,30,0.30))' }}>
       <defs>
         <radialGradient id={g('sh')} cx="0.5" cy="0.5" r="0.5">
           <stop offset="0" stopColor="rgba(6,8,24,0.55)" />
@@ -135,6 +135,11 @@ export default function Pawn3D({ color, glow, tap, onClick, tokenId, uid, uprigh
           {GOLD_CROWN.map(([o, col], i) => (
             <stop key={i} offset={o} stopColor={col} />
           ))}
+        </linearGradient>
+        <linearGradient id={g('goldband')} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#fff3c2" />
+          <stop offset="0.5" stopColor="#f0b53c" />
+          <stop offset="1" stopColor="#b97f14" />
         </linearGradient>
       </defs>
 
@@ -210,9 +215,21 @@ export default function Pawn3D({ color, glow, tap, onClick, tokenId, uid, uprigh
       <ellipse cx="32" cy="21.9" rx="7.1" ry="2.5" fill={s.head[3]} opacity="0.92" />
       <ellipse cx="32" cy="21.2" rx="6.2" ry="1.7" fill={s.head[1]} opacity="0.75" />
 
+      {/* gold collar band where the body meets the base (royal trim) */}
+      <ellipse cx="32" cy="43.1" rx="12.1" ry="3.6" fill="none" stroke={`url(#${g('goldband')})`} strokeWidth="1.7" />
+      <ellipse cx="32" cy="42.5" rx="12.1" ry="3.6" fill="none" stroke="rgba(255,246,200,0.55)" strokeWidth="0.7" />
+
       {/* --- glossy dome head --- */}
       <circle cx="32" cy="13.4" r="8.6" fill={`url(#${g('head')})`} />
       <circle cx="32" cy="13.4" r="8.6" fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth="1" />
+      {/* crescent window reflection on the dome (glass-like) */}
+      <path
+        d="M 25.4 9.6 A 7.6 7.6 0 0 1 34.2 6.1"
+        fill="none"
+        stroke="rgba(255,255,255,0.8)"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
       {/* reflected light along the head's lower rim */}
       <path
         d="M 26.2 18.2 A 8.4 8.4 0 0 0 37.8 18.2"
@@ -289,17 +306,31 @@ export default function Pawn3D({ color, glow, tap, onClick, tokenId, uid, uprigh
         onClick={onClick}
         whileTap={{ scale: 0.82 }}
         whileHover={{ scale: 1.09 }}
-        animate={{ y: [0, -5, 0] }}
-        transition={{ repeat: Infinity, duration: 0.85, ease: 'easeInOut' }}
+        animate={{ y: [0, -5.5, 0] }}
+        transition={{ repeat: Infinity, duration: 0.8, ease: 'easeInOut' }}
         className="absolute inset-0 z-20 cursor-pointer"
         aria-label={`${color} token ${tokenId} (movable)`}
       >
         {uprightArt}
+        {/* breathing colored aura (scale/opacity only — composited) */}
+        <motion.span
+          className="absolute inset-[-14%] rounded-full"
+          style={{ boxShadow: `0 0 20px 6px ${c.glow}` }}
+          animate={{ scale: [0.9, 1.08, 0.9], opacity: [0.55, 1, 0.55] }}
+          transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}
+        />
+        {/* radar ping — expanding ring pulses outward */}
+        <motion.span
+          className="absolute inset-[-8%] rounded-full"
+          style={{ border: `2px solid ${c.light}` }}
+          animate={{ scale: [1, 1.5], opacity: [0.85, 0] }}
+          transition={{ repeat: Infinity, duration: 1.15, ease: 'easeOut' }}
+        />
         <motion.span
           className="absolute inset-[-10%] rounded-full"
           style={{ border: '2.5px dashed #ffd977' }}
           animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 3.2, ease: 'linear' }}
+          transition={{ repeat: Infinity, duration: 2.8, ease: 'linear' }}
         />
         <span
           className="absolute inset-[-12%] rounded-full"
@@ -320,9 +351,11 @@ export default function Pawn3D({ color, glow, tap, onClick, tokenId, uid, uprigh
           animate={{ rotate: 360 }}
           transition={{ repeat: Infinity, duration: 3.2, ease: 'linear' }}
         />
-        <span
-          className="absolute inset-[-12%] rounded-full"
-          style={{ boxShadow: `0 0 15px 3px ${c.glow}` }}
+        <motion.span
+          className="absolute inset-[-14%] rounded-full"
+          style={{ boxShadow: `0 0 16px 5px ${c.glow}` }}
+          animate={{ scale: [0.92, 1.06, 0.92], opacity: [0.6, 1, 0.6] }}
+          transition={{ repeat: Infinity, duration: 1.6, ease: 'easeInOut' }}
         />
       </div>
     )

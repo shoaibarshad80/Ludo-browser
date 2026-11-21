@@ -278,15 +278,38 @@ body {
 
 .ls-palace {
   background:
-    radial-gradient(85% 55% at 50% -8%, rgba(216, 180, 254, 0.18) 0%, transparent 60%),
-    radial-gradient(70% 50% at 88% 100%, rgba(168, 85, 247, 0.2) 0%, transparent 60%),
-    radial-gradient(60% 45% at 8% 96%, rgba(126, 34, 206, 0.22) 0%, transparent 60%),
-    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.016) 0 14px, transparent 14px 28px),
+    radial-gradient(90% 60% at 50% -8%, rgba(233, 213, 255, 0.20) 0%, transparent 62%),
+    radial-gradient(55% 38% at 16% 12%, rgba(255, 193, 94, 0.10) 0%, transparent 60%),
+    radial-gradient(70% 50% at 88% 100%, rgba(168, 85, 247, 0.22) 0%, transparent 60%),
+    radial-gradient(60% 45% at 8% 96%, rgba(126, 34, 206, 0.24) 0%, transparent 60%),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.018) 0 14px, transparent 14px 28px),
     /* translucent purple tint over the velvet photo so UI text stays readable */
-    linear-gradient(180deg, rgba(74, 18, 88, 0.62) 0%, rgba(61, 14, 78, 0.58) 42%, rgba(43, 10, 58, 0.66) 78%, rgba(29, 6, 41, 0.78) 100%),
+    linear-gradient(180deg, rgba(74, 18, 88, 0.60) 0%, rgba(61, 14, 78, 0.56) 42%, rgba(43, 10, 58, 0.64) 78%, rgba(29, 6, 41, 0.76) 100%),
     url('./palace-bg.jpg') center / cover no-repeat,
     /* fallback gradient while the photo loads */
     linear-gradient(180deg, #4a1258 0%, #3d0e4e 42%, #2b0a3a 78%, #1d0629 100%);
+}
+
+/* ---------- board frame: traveling gold light across the rim ---------- */
+
+.ls-frame-sheen {
+  overflow: hidden;
+}
+.ls-frame-sheen::after {
+  content: '';
+  position: absolute;
+  top: -60%;
+  left: 0;
+  width: 34%;
+  height: 220%;
+  background: linear-gradient(100deg, transparent 0%, rgba(255, 244, 214, 0.4) 50%, transparent 100%);
+  transform: translateX(-180%) rotate(16deg);
+  animation: ls-frame-sheen-move 7.5s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes ls-frame-sheen-move {
+  0%, 55% { transform: translateX(-180%) rotate(16deg); }
+  88%, 100% { transform: translateX(430%) rotate(16deg); }
 }
 
 .ls-hud-btn {
@@ -359,5 +382,9 @@ body {
     animation: none !important;
     opacity: 0.22;
     left: 12% !important;
+  }
+  .ls-frame-sheen::after {
+    animation: none !important;
+    opacity: 0;
   }
 }
