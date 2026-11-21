@@ -43,6 +43,10 @@ interface BoardProps {
   interactiveColor: Color | null
   animating: boolean
   emotes: Array<{ id: number; color: Color; emoji: string }>
+  /** degrees (clockwise) to spin the board view so the viewing player's
+   *  yard sits bottom-left under their plate (Ludo Star per-player view).
+   *  Pawns & emote bubbles are counter-rotated to stay upright. */
+  rotate?: number
 }
 
 const pct = (v: number) => `${(v / BOARD_SIZE) * 100}%`
@@ -86,9 +90,12 @@ export default function Board({
   interactiveColor,
   animating,
   emotes,
+  rotate = 0,
 }: BoardProps) {
   const turnColor = game.players[game.turn]?.color
   const turnPlayer = game.players[game.turn]
+  /** pawns/bubbles must spin opposite the board layer to stay upright */
+  const upright = -rotate
 
   /**
    * Which token ids GLOW. Only the TURN player's movable tokens ever
@@ -291,7 +298,10 @@ export default function Board({
         className="absolute inset-[3.4%] overflow-hidden rounded-[4%]"
         style={{ background: '#f2f4ff', boxShadow: 'inset 0 6px 16px rgba(8,12,40,0.30), inset 0 -5px 12px rgba(8,12,40,0.22)' }}
       >
-        <div className="relative h-full w-full">
+        <div
+          className="relative h-full w-full"
+          style={{ transform: `rotate(${rotate}deg)` }}
+        >
           {/* shared svg defs (safe-cell star gradient) */}
           <svg width="0" height="0" className="absolute">
             <defs>
@@ -363,6 +373,7 @@ export default function Board({
                               onClick={() => onTokenClick(token.id)}
                               tokenId={token.id}
                               uid={`y${color}${token.id}`}
+                              upright={upright}
                             />
                           )}
                         </div>
@@ -474,7 +485,7 @@ export default function Board({
                       pointerEvents: 'none',
                     }}
                   >
-                    <Pawn3D color={color} glow={false} tap={false} onClick={() => undefined} tokenId={t.id} uid={`f${color}${t.id}`} />
+                    <Pawn3D color={color} glow={false} tap={false} onClick={() => undefined} tokenId={t.id} uid={`f${color}${t.id}`} upright={upright} />
                   </div>
                 )
               })
@@ -524,6 +535,7 @@ export default function Board({
                       onClick={() => onTokenClick(t.id)}
                       tokenId={t.id}
                       uid={`t${p.color}${t.id}`}
+                      upright={upright}
                     />
                     {hopping && (
                       <span
@@ -560,7 +572,7 @@ export default function Board({
                 transition={{ duration: 0.75, ease: 'easeInOut', times: [0, 0.5, 1] }}
                 aria-hidden
               >
-                <Pawn3D color={f.color} glow={false} tap={false} onClick={() => undefined} tokenId={f.tokenId} uid={`fx${f.key}`} />
+                <Pawn3D color={f.color} glow={false} tap={false} onClick={() => undefined} tokenId={f.tokenId} uid={`fx${f.key}`} upright={upright} />
               </motion.div>
             ))}
           </AnimatePresence>
@@ -663,6 +675,7 @@ export default function Board({
                       left: pct(a.c),
                       top: pct(a.r),
                       width: pct(5.6),
+                      rotate: upright,
                       background: 'linear-gradient(180deg,#ffffff,#eef1fb)',
                       border: `2px solid ${COLOR_HEX[e.color].main}`,
                       boxShadow: `0 4px 10px rgba(10,14,40,0.4), 0 0 12px ${COLOR_HEX[e.color].glow}55`,
@@ -682,7 +695,7 @@ export default function Board({
                   exit={{ opacity: 0, scale: 0.5, y: -18 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 18 }}
                   className="absolute z-40 flex items-center justify-center rounded-full bg-white shadow-lg ring-2 ring-indigo-200"
-                  style={{ left: pct(base.c + 2.2), top: pct(base.r + 0.6), width: pct(1.7), height: pct(1.7) }}
+                  style={{ left: pct(base.c + 2.2), top: pct(base.r + 0.6), width: pct(1.7), height: pct(1.7), rotate: upright }}
                 >
                   <span style={{ fontSize: 'min(5vw, 26px)' }}>{e.emoji}</span>
                 </motion.div>

@@ -771,10 +771,11 @@ export const useLudo = create<LudoStore>((set, get) => {
       loopGen++
       cancelSchedule()
       const me = get().profile
-      // 2P sits at DIAGONALLY OPPOSITE corners like Ludo Star:
-      // red = top-left vs yellow = bottom-right (never same side)
+      // THIS device always plays BLUE — the color whose yard sits at the
+      // bottom-left corner, exactly under the "you" plate (Ludo Star).
+      // 2P: opponent takes green, the diagonal top-right yard.
       const seatColors: Color[] =
-        players.length === 2 ? ['red', 'yellow'] : ['red', 'green', 'yellow', 'blue']
+        players.length === 2 ? ['blue', 'green'] : ['blue', 'red', 'green', 'yellow']
       const config: GameConfig = {
         mode,
         players: players.map((p, i) => ({
@@ -788,7 +789,7 @@ export const useLudo = create<LudoStore>((set, get) => {
       const tpp = tokensPerPlayerFor(mode)
       set({
         view: 'game',
-        session: { mode, stake, online: false, pot: stake * players.length, youColor: 'red' },
+        session: { mode, stake, online: false, pot: stake * players.length, youColor: 'blue' },
         game: state,
         winData: null,
         animating: false,

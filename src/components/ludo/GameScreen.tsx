@@ -7,7 +7,8 @@
 //  · top HUD: menu · friends · trophy · sound + gold coins pill
 //  · four corner player plates — YOUR plate always sits bottom-left
 //    (Ludo Star seating), the others fill the corners clockwise; die
-//    beside each
+//    beside each; the board view spins the same amount so YOUR yard
+//    sits right under your plate (pawns & bubbles stay upright)
 //  · clean board in the middle (yards hold only the pawns)
 //  · compact status row under the board: EMOJI · turn pill · CHAT
 // All game logic & handlers preserved (rules, dice, moves,
@@ -23,7 +24,7 @@ import { DicePlate } from '@/components/ludo/Dice'
 import { ChatPanel, EmoteButton, ChatButton } from '@/components/ludo/EmoteBar'
 import WinOverlay from '@/components/ludo/WinOverlay'
 import { useLudo } from '@/stores/ludoStore'
-import { COLOR_HEX } from '@/lib/ludo/board'
+import { COLOR_HEX, SEAT_ROTATION } from '@/lib/ludo/board'
 import { FREE_REFILL } from '@/lib/ludo/constants'
 import { TURN_SECONDS } from '@/lib/ludo/constants'
 import type { Color, Player } from '@/lib/ludo/types'
@@ -321,6 +322,10 @@ export default function GameScreen() {
     plates = [rot[0] ?? null, rot[1] ?? null, rot[2] ?? null, rot[3] ?? null]
   }
 
+  // the board view itself spins so YOUR yard sits under your plate
+  // (plates rotate by seat; board rotates by SEAT_ROTATION — they align)
+  const boardRot = inGame.includes(session.youColor) ? (SEAT_ROTATION[session.youColor] ?? 0) : 0
+
   // dice shows TAP state when you can roll, otherwise last rolled value(s)
   const displayDice = canRoll && game.phase === 'roll' ? [] : diceValues.length > 0 ? diceValues : game.dice
 
@@ -470,6 +475,7 @@ export default function GameScreen() {
               onTokenClick={(id) => void clickToken(id)}
               interactiveColor={interactiveColor}
               animating={animating}
+              rotate={boardRot}
               emotes={visibleEmotes.map((e) => ({ id: e.id, color: e.color, emoji: e.emoji }))}
             />
           </div>

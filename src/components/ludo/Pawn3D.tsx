@@ -86,9 +86,12 @@ export interface PawnProps {
   onClick: () => void
   tokenId: number
   uid: string
+  /** counter-rotation (deg) applied to the pawn art so it stays upright
+   *  when the whole board view is rotated for the viewing player */
+  upright?: number
 }
 
-export default function Pawn3D({ color, glow, tap, onClick, tokenId, uid }: PawnProps) {
+export default function Pawn3D({ color, glow, tap, onClick, tokenId, uid, upright = 0 }: PawnProps) {
   const c = COLOR_HEX[color]
   const s = SKIN[color]
   const g = (name: string) => `${name}-${uid}`
@@ -271,6 +274,14 @@ export default function Pawn3D({ color, glow, tap, onClick, tokenId, uid }: Pawn
     </svg>
   )
 
+  // pawn art wrapper: keeps the silhouette upright (head up, base down,
+  // shadow under) even when the board layer is rotated per viewing seat
+  const uprightArt = (
+    <div className="h-full w-full" style={{ transform: `rotate(${upright}deg)` }}>
+      {svg}
+    </div>
+  )
+
   if (tap) {
     return (
       <motion.button
@@ -283,7 +294,7 @@ export default function Pawn3D({ color, glow, tap, onClick, tokenId, uid }: Pawn
         className="absolute inset-0 z-20 cursor-pointer"
         aria-label={`${color} token ${tokenId} (movable)`}
       >
-        {svg}
+        {uprightArt}
         <motion.span
           className="absolute inset-[-10%] rounded-full"
           style={{ border: '2.5px dashed #ffd977' }}
@@ -302,7 +313,7 @@ export default function Pawn3D({ color, glow, tap, onClick, tokenId, uid }: Pawn
     // bot / remote-human display glow — no pointer, but clearly highlighted
     return (
       <div className="absolute inset-0 z-10" aria-hidden>
-        {svg}
+        {uprightArt}
         <motion.span
           className="absolute inset-[-10%] rounded-full"
           style={{ border: '2.5px dashed rgba(255,217,119,0.85)' }}
@@ -319,7 +330,7 @@ export default function Pawn3D({ color, glow, tap, onClick, tokenId, uid }: Pawn
 
   return (
     <div className="absolute inset-0 z-10" aria-hidden>
-      {svg}
+      {uprightArt}
     </div>
   )
 }

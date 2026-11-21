@@ -76,6 +76,21 @@ export const YARD_BASE: Record<Color, Cell> = {
   blue: { r: 9, c: 0 },
 }
 
+/**
+ * How far (degrees, clockwise) to rotate the whole board view so that
+ * THIS color's yard lands at the BOTTOM-LEFT corner, under the player
+ * plate that the seat rotation always puts there (Ludo Star: you always
+ * view the board from your own side). blue needs no rotation; red spins
+ * 270° CW (= 90° CCW) so top-left becomes bottom-left, etc.
+ * Pawns and emote bubbles are counter-rotated to stay upright.
+ */
+export const SEAT_ROTATION: Record<Color, number> = {
+  blue: 0,
+  yellow: 90,
+  green: 180,
+  red: 270,
+}
+
 /** Token resting slots inside each yard (cell centers, cell units). */
 export const YARD_SLOTS: Array<{ r: number; c: number }> = [
   { r: 1.6, c: 1.6 },
