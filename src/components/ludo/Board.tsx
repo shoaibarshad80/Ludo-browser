@@ -12,7 +12,7 @@
 // ============================================================
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useAnimationControls } from 'framer-motion'
 import type { Color, GameState } from '@/lib/ludo/types'
 import {
   BOARD_SIZE,
@@ -29,6 +29,7 @@ import {
 } from '@/lib/ludo/board'
 import { legalMoves } from '@/lib/ludo/engine'
 import Pawn3D from '@/components/ludo/Pawn3D'
+import { sfx } from '@/lib/ludo/sounds'
 
 interface BoardProps {
   game: GameState
@@ -155,12 +156,21 @@ export default function Board({
   const prevPosRef = useRef<Map<string, string>>(new Map())
   const hopUntilRef = useRef<Map<string, number>>(new Map())
 
-  // capture FX — when a token is knocked back home (track → yard)
-  // a sparkling ring burst plays on the yard slot it lands in
+  // capture FX — a knockout plays THREE beats: impact burst at the cell
+  // where the pawn was hit, the victim pawn flying back to its yard in
+  // an arc, and a sparkling ring where it lands. Plus a small board shake.
   const prevLocRef = useRef<Map<string, string>>(new Map())
+  const prevTrackRef = useRef<Map<string, number>>(new Map())
   const [captureFx, setCaptureFx] = useState<Array<{ key: string; color: Color; c: number; r: number }>>([])
+  const [burstFx, setBurstFx] = useState<Array<{ key: string; color: Color; x: number; y: number }>>([])
+  const [flightFx, setFlightFx] = useState<
+    Array<{ key: string; color: Color; tokenId: number; fromX: number; fromY: number; toX: number; toY: number }>
+  >([])
+  const shakeControls = useAnimationControls()
   useEffect(() => {
-    const found: Array<{ key: string; color: Color; c: number; r: number }> = []
+    const rings: Array<{ key: string; color: Color; c: number; r: number }> = []
+    const bursts: Array<{ key: string; color: Color; x: number; y: number }> = []
+    const flights: Array<{ key: string; color: Color; tokenId: number; fromX: number; fromY: number; toX: number; toY: number }> = []
     for (const p of game.players) {
       for (const t of p.tokens) {
         const k = `${p.color}-${t.id}`
@@ -168,21 +178,49 @@ export default function Board({
         if (prev === 'track' && t.location === 'yard') {
           const base = YARD_BASE[p.color]
           const slot = YARD_SLOTS[t.id % 4]
-          found.push({ key: `${k}-${Date.now()}`, color: p.color, c: base.c + slot.c, r: base.r + slot.r })
+          rings.push({ key: `${k}-${Date.now()}`, color: p.color, c: base.c + slot.c, r: base.r + slot.r })
+          const fromIdx = prevTrackRef.current.get(k)
+          if (fromIdx !== undefined) {
+            const from = tokenScreenPos(p.color, t.id, 'track', fromIdx, 0, -1, 1)
+            const to = tokenScreenPos(p.color, t.id, 'yard', 0, 0, -1, 1)
+            const stamp = Date.now()
+            bursts.push({ key: `b-${k}-${stamp}`, color: p.color, x: from.x, y: from.y })
+            flights.push({ key: `f-${k}-${stamp}`, color: p.color, tokenId: t.id, fromX: from.x, fromY: from.y, toX: to.x, toY: to.y })
+          }
         }
+        if (t.location === 'track') prevTrackRef.current.set(k, t.trackIdx)
         prevLocRef.current.set(k, t.location)
       }
     }
-    if (found.length > 0) {
-      const keys = found.map((f) => f.key)
-      setCaptureFx((fx) => [...fx, ...found])
-      const timer = setTimeout(() => setCaptureFx((fx) => fx.filter((f) => !keys.includes(f.key))), 950)
-      return () => clearTimeout(timer)
+    if (rings.length > 0) {
+      sfx.whoosh()
+      void shakeControls.start({
+        x: [0, -6, 6, -4, 4, -2, 0],
+        y: [0, 2, -3, 2, -1, 1, 0],
+        transition: { duration: 0.45, ease: 'easeOut' },
+      })
+      const rKeys = rings.map((f) => f.key)
+      const bKeys = bursts.map((f) => f.key)
+      setCaptureFx((fx) => [...fx, ...rings])
+      setBurstFx((fx) => [...fx, ...bursts])
+      setFlightFx((fx) => [...fx, ...flights])
+      const t1 = setTimeout(() => setCaptureFx((fx) => fx.filter((f) => !rKeys.includes(f.key))), 950)
+      const t2 = setTimeout(() => setBurstFx((fx) => fx.filter((f) => !bKeys.includes(f.key))), 750)
+      const t3 = setTimeout(() => setFlightFx((fx) => fx.filter((f) => !flights.some((g) => g.key === f.key))), 850)
+      return () => {
+        clearTimeout(t1)
+        clearTimeout(t2)
+        clearTimeout(t3)
+      }
     }
-  }, [game])
+  }, [game, shakeControls])
 
   return (
-    <div className="relative w-full aspect-square select-none" style={{ maxWidth: 'min(92vw, 58vh)', margin: '0 auto' }}>
+    <motion.div
+      animate={shakeControls}
+      className="relative w-full aspect-square select-none"
+      style={{ maxWidth: 'min(92vw, 58vh)', margin: '0 auto' }}
+    >
       {/* deep blue leather frame with beveled gold trim (Ludo Star table feel) */}
       <div
         className="absolute inset-0 rounded-[6%]"
@@ -471,6 +509,84 @@ export default function Board({
               })
           )}
 
+          {/* captured pawn flying back to its yard (arc flight ghost) */}
+          <AnimatePresence>
+            {flightFx.map((f) => (
+              <motion.div
+                key={f.key}
+                className="pointer-events-none absolute z-[38]"
+                style={{
+                  width: pct(0.92),
+                  height: pct(0.92),
+                  marginLeft: pct(-0.46),
+                  marginTop: pct(-0.46),
+                }}
+                initial={{ left: `${f.fromX}%`, top: `${f.fromY}%`, scale: 0.9, rotate: 0, opacity: 1 }}
+                animate={{
+                  left: [`${f.fromX}%`, `${(f.fromX + f.toX) / 2}%`, `${f.toX}%`],
+                  top: [`${f.fromY}%`, `${Math.min(f.fromY, f.toY) - 9}%`, `${f.toY}%`],
+                  scale: [0.9, 1.25, 0.72],
+                  rotate: [0, 16, -10],
+                  opacity: [1, 1, 0],
+                }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.75, ease: 'easeInOut', times: [0, 0.5, 1] }}
+                aria-hidden
+              >
+                <Pawn3D color={f.color} glow={false} tap={false} onClick={() => undefined} tokenId={f.tokenId} uid={`fx${f.key}`} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+
+          {/* impact burst at the capture cell (shockwave + star sparks) */}
+          <AnimatePresence>
+            {burstFx.map((b) => (
+              <motion.div
+                key={b.key}
+                className="pointer-events-none absolute z-[45]"
+                style={{
+                  left: pct(b.x),
+                  top: pct(b.y),
+                  width: pct(2.6),
+                  height: pct(2.6),
+                  x: '-50%',
+                  y: '-50%',
+                }}
+                initial={{ scale: 0.3, opacity: 1 }}
+                animate={{ scale: 2, opacity: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.65, ease: 'easeOut' }}
+                aria-hidden
+              >
+                <span
+                  className="absolute inset-0 rounded-full"
+                  style={{ border: '3.5px solid #ffffff', boxShadow: `0 0 18px 6px ${COLOR_HEX[b.color].glow}` }}
+                />
+                <span className="absolute inset-[22%] rounded-full" style={{ border: `2.5px solid ${COLOR_HEX[b.color].light}` }} />
+                {/* four star sparks flying outward */}
+                {[
+                  [1, 1],
+                  [-1, 1],
+                  [1, -1],
+                  [-1, -1],
+                ].map(([sx, sy], i) => (
+                  <motion.span
+                    key={i}
+                    className="absolute left-1/2 top-1/2"
+                    style={{ width: pct(0.55), height: pct(0.55), marginLeft: pct(-0.275), marginTop: pct(-0.275) }}
+                    initial={{ x: 0, y: 0, scale: 1, opacity: 1, rotate: 0 }}
+                    animate={{ x: sx * 26, y: sy * 26, scale: 0.3, opacity: 0, rotate: 90 }}
+                    transition={{ duration: 0.55, ease: 'easeOut' }}
+                  >
+                    <svg viewBox="0 0 24 24" className="h-full w-full">
+                      <path d="M12 2l2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2z" fill="#ffd977" stroke="#ffffff" strokeWidth="1" />
+                    </svg>
+                  </motion.span>
+                ))}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+
           {/* capture burst — sparkling ring where a knocked-out token lands home */}
           <AnimatePresence>
             {captureFx.map((f) => (
@@ -548,6 +664,6 @@ export default function Board({
           </AnimatePresence>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }

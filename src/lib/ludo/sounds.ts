@@ -71,6 +71,11 @@ export const sfx = {
     tone(700, 0.18, 'sawtooth', 0.1, 0, 160)
     noise(0.12, 0.07, 0.02)
   },
+  /** airy slide for the captured pawn flying back to its yard */
+  whoosh() {
+    tone(520, 0.28, 'sine', 0.05, 0.04, 130)
+    noise(0.2, 0.045, 0.04)
+  },
   six() {
     tone(660, 0.1, 'sine', 0.09)
     tone(880, 0.12, 'sine', 0.09, 0.09)
