@@ -84,7 +84,7 @@ function PlateSeat(p: SeatProps) {
   }
   const isTurn = p.isTurn
   return (
-    <div className={`flex shrink-0 items-center gap-1.5 ${p.side === 'right' ? 'flex-row-reverse' : ''}`}>
+    <div className={`flex shrink-0 items-center gap-2 ${p.side === 'right' ? 'flex-row-reverse' : ''}`}>
       {/* avatar column */}
       <div className="flex flex-col items-center gap-1">
         <div className="relative" style={{ width: 48, height: 48 }}>
@@ -438,13 +438,13 @@ export default function GameScreen() {
         {/* ── table: plates row · board · plates row ── */}
         <div className="flex w-full min-h-0 flex-1 flex-col items-center justify-center">
           {/* top plates: red | green */}
-          <div className="flex w-full items-center justify-between">
+          <div className="flex w-full items-center justify-between pb-0.5">
             {seat('red', 'left')}
             {seat('green', 'right')}
           </div>
 
-          {/* the board */}
-          <div className="flex w-full min-h-0 flex-1 items-center justify-center py-0.5">
+          {/* the board — with breathing room so dice/plates never touch it */}
+          <div className="flex w-full min-h-0 flex-1 items-center justify-center px-1 py-2">
             <Board
               game={game}
               movableTokenIds={movableTokenIds}
@@ -456,7 +456,7 @@ export default function GameScreen() {
           </div>
 
           {/* bottom plates: blue | yellow */}
-          <div className="flex w-full items-center justify-between">
+          <div className="flex w-full items-center justify-between pt-0.5">
             {seat('blue', 'left')}
             {seat('yellow', 'right')}
           </div>

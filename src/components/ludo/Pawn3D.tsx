@@ -103,8 +103,8 @@ export default function Pawn3D({ color, glow, tap, onClick, tokenId, uid }: Pawn
         </radialGradient>
         {/* colored contact halo — makes the pawn pop on any cell */}
         <radialGradient id={g('halo')} cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0" stopColor={c.main} stopOpacity="0.40" />
-          <stop offset="0.62" stopColor={c.main} stopOpacity="0.16" />
+          <stop offset="0" stopColor={c.main} stopOpacity="0.5" />
+          <stop offset="0.62" stopColor={c.main} stopOpacity="0.2" />
           <stop offset="1" stopColor={c.main} stopOpacity="0" />
         </radialGradient>
         <linearGradient id={g('body')} x1="0" y1="0" x2="1" y2="0">
@@ -149,6 +149,8 @@ export default function Pawn3D({ color, glow, tap, onClick, tokenId, uid }: Pawn
       />
       {/* top surface */}
       <ellipse cx="32" cy="45.6" rx="15.6" ry="5.4" fill={`url(#${g('btop')})`} />
+      {/* painted rim ring in the player color (crisper token identity) */}
+      <ellipse cx="32" cy="45.6" rx="14.4" ry="4.9" fill="none" stroke={c.light} strokeWidth="1.3" opacity="0.9" />
       {/* engraved inner ring on the base plate */}
       <ellipse cx="32" cy="45.6" rx="11.6" ry="3.9" fill="none" stroke="rgba(0,0,0,0.18)" strokeWidth="1" />
       <ellipse cx="32" cy="45.3" rx="11.6" ry="3.9" fill="none" stroke="rgba(255,255,255,0.30)" strokeWidth="0.8" />

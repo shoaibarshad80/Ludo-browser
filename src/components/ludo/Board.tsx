@@ -167,6 +167,30 @@ export default function Board({
     Array<{ key: string; color: Color; tokenId: number; fromX: number; fromY: number; toX: number; toY: number }>
   >([])
   const shakeControls = useAnimationControls()
+
+  // Fit the square board into the REAL available box between the plates.
+  // Fixed vh caps can overflow on short screens (then the dice/plates
+  // overlap the board) — so measure the wrapper and size by the smaller
+  // of its width/height, still capped at 92vw / 58vh for tall screens.
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const [boardPx, setBoardPx] = useState<number | null>(null)
+  useEffect(() => {
+    const el = wrapRef.current
+    if (!el) return
+    const measure = () => {
+      const r = el.getBoundingClientRect()
+      const cap = Math.min(window.innerWidth * 0.92, window.innerHeight * 0.58)
+      setBoardPx(Math.max(180, Math.floor(Math.min(r.width, r.height, cap))))
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    window.addEventListener('resize', measure)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [])
   useEffect(() => {
     const rings: Array<{ key: string; color: Color; c: number; r: number }> = []
     const bursts: Array<{ key: string; color: Color; x: number; y: number }> = []
@@ -216,11 +240,12 @@ export default function Board({
   }, [game, shakeControls])
 
   return (
-    <motion.div
-      animate={shakeControls}
-      className="relative w-full aspect-square select-none"
-      style={{ maxWidth: 'min(92vw, 58vh)', margin: '0 auto' }}
-    >
+    <div ref={wrapRef} className="grid h-full w-full place-items-center">
+      <motion.div
+        animate={shakeControls}
+        className="relative select-none"
+        style={{ width: boardPx ? `${boardPx}px` : 'min(92vw, 58vh)', aspectRatio: '1 / 1' }}
+      >
       {/* deep blue leather frame with beveled gold trim (Ludo Star table feel) */}
       <div
         className="absolute inset-0 rounded-[6%]"
@@ -664,6 +689,7 @@ export default function Board({
           </AnimatePresence>
         </div>
       </div>
-    </motion.div>
+      </motion.div>
+    </div>
   )
 }

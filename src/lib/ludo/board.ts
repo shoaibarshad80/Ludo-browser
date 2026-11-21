@@ -107,10 +107,10 @@ export const FINISH_SLOTS: Record<Color, Array<{ r: number; c: number }>> = {
  */
 export function stackPawnSize(n: number): number {
   if (n >= 5) return 0.55
-  if (n === 4) return 0.68
-  if (n === 3) return 0.75
-  if (n === 2) return 0.85
-  return 0.96
+  if (n === 4) return 0.7
+  if (n === 3) return 0.78
+  if (n === 2) return 0.9
+  return 1.06
 }
 
 /**
@@ -172,12 +172,12 @@ export function tokenScreenPos(
     let dp = 0
     let ds = 0
     if (n === 2) {
-      dp = i === 0 ? -0.215 : 0.215
+      dp = i === 0 ? -0.23 : 0.23
     } else if (n === 3) {
       // triangle: two along the lane, one centered behind
-      if (i === 0) dp = -0.26
-      else if (i === 1) dp = 0.26
-      else ds = 0.28
+      if (i === 0) dp = -0.27
+      else if (i === 1) dp = 0.27
+      else ds = 0.29
     } else if (n === 4) {
       const x = i % 2
       const y = i < 2 ? 0 : 1
