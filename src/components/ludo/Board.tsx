@@ -332,13 +332,13 @@ export default function Board({
           className="relative h-full w-full"
           style={{ transform: `rotate(${rotate}deg)` }}
         >
-          {/* shared svg defs (safe-cell star gradient) */}
+          {/* shared svg defs (gold safe-cell star gradient) */}
           <svg width="0" height="0" className="absolute">
             <defs>
-              <linearGradient id="ls-star-grad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stopColor="#e6ebff" />
-                <stop offset="0.5" stopColor="#aeb7dd" />
-                <stop offset="1" stopColor="#7d87b5" />
+              <linearGradient id="ls-safe-star-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="#ffe08a" />
+                <stop offset="0.45" stopColor="#efab2e" />
+                <stop offset="1" stopColor="#b97708" />
               </linearGradient>
             </defs>
           </svg>
@@ -438,17 +438,41 @@ export default function Board({
                   ...style,
                 }}
               >
+                {/* star (safe) cell: breathing halo + gold star — reads as
+                    a protected square exactly like Ludo Star */}
                 {cell.star && (
+                  <>
+                    <span
+                      aria-hidden
+                      className="ls-safe-halo pointer-events-none absolute inset-[-38%] z-[1] rounded-full"
+                    />
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="relative h-[76%] w-[76%]"
+                      style={{ filter: 'drop-shadow(0 1.5px 1.5px rgba(122,82,16,0.5))' }}
+                    >
+                      <path
+                        d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"
+                        fill="url(#ls-safe-star-grad)"
+                        stroke="rgba(255,251,235,0.95)"
+                        strokeWidth="1"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </>
+                )}
+                {/* colored START cell (also a safe square): white star emblem */}
+                {cell.start && !cell.star && (
                   <svg
                     viewBox="0 0 24 24"
-                    className="h-[72%] w-[72%]"
-                    style={{ filter: 'drop-shadow(0 1.5px 1px rgba(20,26,60,0.35))' }}
+                    className="h-[64%] w-[64%]"
+                    style={{ filter: 'drop-shadow(0 1.5px 1px rgba(10,16,40,0.4))' }}
                   >
                     <path
                       d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"
-                      fill="url(#ls-star-grad)"
-                      stroke="rgba(255,255,255,0.9)"
-                      strokeWidth="1"
+                      fill="rgba(255,255,255,0.96)"
+                      stroke="rgba(15,22,50,0.30)"
+                      strokeWidth="0.9"
                       strokeLinejoin="round"
                     />
                   </svg>

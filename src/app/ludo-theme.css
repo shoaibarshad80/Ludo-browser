@@ -357,6 +357,30 @@ body {
   border-radius: 8px;
 }
 
+/* ---------- safe-cell stars ---------- */
+
+/* soft breathing halo behind every safe-cell star (Ludo Star protected square) */
+.ls-safe-halo {
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.85) 0%,
+    rgba(255, 224, 138, 0.34) 46%,
+    transparent 72%
+  );
+  animation: ls-safe-pulse 2.8s ease-in-out infinite;
+}
+@keyframes ls-safe-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.1);
+  }
+}
+
 /* ---------- misc ---------- */
 
 .ls-glass-input {
@@ -375,8 +399,11 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ls-spin-slow, .ls-float {
+  .ls-spin-slow, .ls-float, .ls-safe-halo {
     animation: none !important;
+  }
+  .ls-safe-halo {
+    opacity: 0.7;
   }
   .ls-shine::after {
     animation: none !important;
