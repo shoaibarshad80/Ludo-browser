@@ -9,7 +9,8 @@
 //    name pill, turn crown + timer, online dot — die beside each
 //  · clean board in the middle (yards hold only the pawns)
 //  · crown turn pill under the board
-//  · big EMOJI / CHAT buttons at the bottom
+//  · floating EMOJI / CHAT round buttons on the right edge (no bottom bar —
+//    the board gets the full height)
 // All game logic & handlers preserved (rules, dice, moves,
 // turns, chat, emotes untouched).
 // ============================================================
@@ -343,7 +344,7 @@ export default function GameScreen() {
   return (
     <div className="ls-palace relative h-full overflow-hidden">
       <div className="ls-vignette" />
-      <div className="ls-safe-bottom relative z-10 mx-auto flex h-full w-full max-w-[430px] flex-col px-1 pb-1.5 pt-1.5">
+      <div className="ls-safe-bottom relative z-10 mx-auto flex h-full w-full max-w-[430px] flex-col px-0.5 pb-1.5 pt-1.5">
         {/* ── top HUD: menu · friends · trophy · sound — coins pill ── */}
         <div className="flex w-full items-center justify-between gap-2">
           <div className="flex items-center gap-1.5">
@@ -443,8 +444,8 @@ export default function GameScreen() {
             {seat('green', 'right')}
           </div>
 
-          {/* the board — fills the phone width edge-to-edge (Ludo Star) */}
-          <div className="flex w-full min-h-0 flex-1 items-center justify-center py-0.5">
+          {/* the board — fills the phone edge-to-edge (Ludo Star) */}
+          <div className="relative flex w-full min-h-0 flex-1 items-center justify-center py-0.5">
             <Board
               game={game}
               movableTokenIds={movableTokenIds}
@@ -453,6 +454,10 @@ export default function GameScreen() {
               animating={animating}
               emotes={visibleEmotes.map((e) => ({ id: e.id, color: e.color, emoji: e.emoji }))}
             />
+            {/* floating EMOJI / CHAT stack — right edge, over the yard margin */}
+            <div className="absolute right-0.5 top-0.5 z-30">
+              <EmoteBar onEmote={sendEmote} onOpenChat={() => setChatOpen(!chatOpen)} unread={unread} />
+            </div>
           </div>
 
           {/* bottom plates: blue | yellow */}
@@ -487,11 +492,6 @@ export default function GameScreen() {
           {game.mode === 'master' && game.dice.length > 1 && (
             <div className="text-center text-[10px] text-fuchsia-200/50">Master: use both dice · tap a die to switch</div>
           )}
-        </div>
-
-        {/* ── bottom bar: EMOJI · CHAT ── */}
-        <div className="mt-1 w-full">
-          <EmoteBar onEmote={sendEmote} onOpenChat={() => setChatOpen(!chatOpen)} unread={unread} />
         </div>
       </div>
 

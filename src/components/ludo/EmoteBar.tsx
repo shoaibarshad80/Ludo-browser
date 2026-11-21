@@ -1,6 +1,7 @@
 'use client'
 
-// Emote bar + quick chat + chat panel — premium glass styling
+// Floating side stack (right edge, over the yard margin — Ludo Star style)
+// + quick chat + chat panel — premium glass styling
 
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -20,14 +21,14 @@ export function EmoteBar({
 }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="relative flex w-full items-stretch justify-center gap-3">
+    <div className="relative flex flex-col items-center gap-2">
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.85 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.85 }}
-            className="ls-panel absolute bottom-12 left-1/2 z-50 w-64 -translate-x-1/2 rounded-2xl px-3 py-2"
+            initial={{ opacity: 0, x: 12, scale: 0.85 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 12, scale: 0.85 }}
+            className="ls-panel absolute right-11 top-0 z-50 w-60 rounded-2xl px-3 py-2"
           >
             <div className="grid grid-cols-6 gap-1">
               {EMOTES.map((e) => (
@@ -67,20 +68,18 @@ export function EmoteBar({
       <motion.button
         whileTap={{ scale: 0.93 }}
         onClick={() => setOpen((o) => !o)}
-        className="ls-bottom-btn relative flex h-11 flex-1 items-center justify-center gap-2 rounded-2xl"
+        className="ls-bottom-btn relative grid h-10 w-10 place-items-center rounded-full"
         aria-label="Send emote"
       >
-        <Smile size={19} className="text-amber-300" />
-        <span className="ls-font text-[15px] tracking-wide text-white">EMOJI</span>
+        <Smile size={18} className="text-amber-300" />
       </motion.button>
       <motion.button
         whileTap={{ scale: 0.93 }}
         onClick={onOpenChat}
-        className="ls-bottom-btn relative flex h-11 flex-1 items-center justify-center gap-2 rounded-2xl"
+        className="ls-bottom-btn relative grid h-10 w-10 place-items-center rounded-full"
         aria-label="Open chat"
       >
-        <MessageCircle size={18} className="text-violet-200" />
-        <span className="ls-font text-[15px] tracking-wide text-white">CHAT</span>
+        <MessageCircle size={17} className="text-violet-200" />
         {unread > 0 && (
           <span
             className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full px-1 text-[10px] font-bold text-white"
