@@ -5,12 +5,11 @@
 // reference screenshot, premium edition):
 //  · purple palace backdrop with soft pattern
 //  · top HUD: menu · friends · trophy · sound + gold coins pill
-//  · four corner player plates: cartoon avatar in a color ring,
-//    name pill, turn crown + timer, online dot — die beside each
+//  · four corner player plates — YOUR plate always sits bottom-left
+//    (Ludo Star seating), the others fill the corners clockwise; die
+//    beside each
 //  · clean board in the middle (yards hold only the pawns)
-//  · crown turn pill under the board
-//  · floating EMOJI / CHAT round buttons on the right edge (no bottom bar —
-//    the board gets the full height)
+//  · compact status row under the board: EMOJI · turn pill · CHAT
 // All game logic & handlers preserved (rules, dice, moves,
 // turns, chat, emotes untouched).
 // ============================================================
@@ -21,7 +20,7 @@ import { Menu, Plus, Trophy, Users, Volume2, VolumeX } from 'lucide-react'
 import Board from '@/components/ludo/Board'
 import Avatar from '@/components/ludo/Avatar'
 import { DicePlate } from '@/components/ludo/Dice'
-import { ChatPanel, EmoteBar } from '@/components/ludo/EmoteBar'
+import { ChatPanel, EmoteButton, ChatButton } from '@/components/ludo/EmoteBar'
 import WinOverlay from '@/components/ludo/WinOverlay'
 import { useLudo } from '@/stores/ludoStore'
 import { COLOR_HEX } from '@/lib/ludo/board'
@@ -60,7 +59,7 @@ function CoinIcon({ size = 18 }: { size?: number }) {
 }
 
 interface SeatProps {
-  color: Color
+  color: Color | null
   player: Player | undefined
   isTurn: boolean
   isYou: boolean
@@ -76,13 +75,14 @@ interface SeatProps {
   side: 'left' | 'right'
 }
 
-/** corner player plate: cartoon avatar in a color ring + name pill + die beside */
+/** corner player plate: cartoon avatar in a color ring + name pill + die beside.
+ *  color null (empty corner in 2-player games) renders an invisible spacer. */
 function PlateSeat(p: SeatProps) {
-  const c = COLOR_HEX[p.color]
-  if (!p.player) {
+  if (!p.color || !p.player) {
     // unused seat (2-player games) — invisible spacer keeps the board centered
     return <div className="h-[62px] w-[98px] shrink-0" aria-hidden />
   }
+  const c = COLOR_HEX[p.color]
   const isTurn = p.isTurn
   return (
     <div className={`flex shrink-0 items-center gap-2 ${p.side === 'right' ? 'flex-row-reverse' : ''}`}>
@@ -303,10 +303,28 @@ export default function GameScreen() {
       ? turnColor
       : null
 
+  // ── Ludo Star seating ──
+  // Board yards never move; only the avatar plates rotate so the player
+  // this device controls (session.youColor) always sits BOTTOM-LEFT.
+  // plates = [TL, TR, BR, BL] in clockwise board order red→green→yellow→blue.
+  const CLOCK: Color[] = ['red', 'green', 'yellow', 'blue']
+  const inGame = CLOCK.filter((c) => game.players.some((p) => p.color === c))
+  let plates: Array<Color | null>
+  if (inGame.length === 2) {
+    // 2P sits diagonally like Ludo Star: you bottom-left, opponent top-right
+    const mine = inGame.includes(session.youColor) ? session.youColor : inGame[0]
+    const opp = inGame.find((c) => c !== mine) ?? null
+    plates = [null, opp, null, mine]
+  } else {
+    const i = inGame.indexOf(session.youColor)
+    const rot = i >= 0 ? [...inGame.slice(i + 1), ...inGame.slice(0, i + 1)] : inGame
+    plates = [rot[0] ?? null, rot[1] ?? null, rot[2] ?? null, rot[3] ?? null]
+  }
+
   // dice shows TAP state when you can roll, otherwise last rolled value(s)
   const displayDice = canRoll && game.phase === 'roll' ? [] : diceValues.length > 0 ? diceValues : game.dice
 
-  const seat = (color: Color, side: 'left' | 'right') => (
+  const seat = (color: Color | null, side: 'left' | 'right') => (
     <PlateSeat
       color={color}
       player={game.players.find((p) => p.color === color)}
@@ -438,14 +456,14 @@ export default function GameScreen() {
 
         {/* ── table: plates row · board · plates row ── */}
         <div className="flex w-full min-h-0 flex-1 flex-col items-center justify-center">
-          {/* top plates: red | green */}
-          <div className="flex w-full items-center justify-between pb-0.5">
-            {seat('red', 'left')}
-            {seat('green', 'right')}
+          {/* top plates: TL | TR */}
+          <div className="flex w-full items-center justify-between px-2 pb-0.5">
+            {seat(plates[0], 'left')}
+            {seat(plates[1], 'right')}
           </div>
 
           {/* the board — fills the phone edge-to-edge (Ludo Star) */}
-          <div className="relative flex w-full min-h-0 flex-1 items-center justify-center py-0.5">
+          <div className="flex w-full min-h-0 flex-1 items-center justify-center py-0.5">
             <Board
               game={game}
               movableTokenIds={movableTokenIds}
@@ -454,27 +472,25 @@ export default function GameScreen() {
               animating={animating}
               emotes={visibleEmotes.map((e) => ({ id: e.id, color: e.color, emoji: e.emoji }))}
             />
-            {/* floating EMOJI / CHAT stack — right edge, over the yard margin */}
-            <div className="absolute right-0.5 top-0.5 z-30">
-              <EmoteBar onEmote={sendEmote} onOpenChat={() => setChatOpen(!chatOpen)} unread={unread} />
-            </div>
           </div>
 
-          {/* bottom plates: blue | yellow */}
-          <div className="flex w-full items-center justify-between pt-0.5">
-            {seat('blue', 'left')}
-            {seat('yellow', 'right')}
+          {/* bottom plates: BL (you) | BR */}
+          <div className="flex w-full items-center justify-between px-2 pt-0.5">
+            {seat(plates[3], 'left')}
+            {seat(plates[2], 'right')}
           </div>
 
-          {/* crown turn pill */}
-          <div
-            className="mt-0.5 flex items-center gap-1.5 rounded-full px-3.5 py-0.5"
-            style={{
-              background: 'linear-gradient(180deg, rgba(40,12,62,0.9), rgba(24,6,40,0.9))',
-              border: `1.5px solid rgba(246,196,83,0.45)`,
-              boxShadow: `0 4px 10px rgba(10,2,20,0.45), 0 0 14px ${COLOR_HEX[turnColor]?.glow ?? 'transparent'}55, inset 0 1px 0 rgba(255,236,190,0.16)`,
-            }}
-          >
+          {/* status row: EMOJI · turn pill · CHAT */}
+          <div className="mt-0.5 flex w-full items-center justify-center gap-2.5">
+            <EmoteButton onEmote={sendEmote} />
+            <div
+              className="flex items-center gap-1.5 rounded-full px-3.5 py-0.5"
+              style={{
+                background: 'linear-gradient(180deg, rgba(40,12,62,0.9), rgba(24,6,40,0.9))',
+                border: `1.5px solid rgba(246,196,83,0.45)`,
+                boxShadow: `0 4px 10px rgba(10,2,20,0.45), 0 0 14px ${COLOR_HEX[turnColor]?.glow ?? 'transparent'}55, inset 0 1px 0 rgba(255,236,190,0.16)`,
+              }}
+            >
             {game.phase !== 'gameover' && (
               <motion.span
                 style={{ fontSize: 12, filter: 'drop-shadow(0 1.5px 1px rgba(10,2,20,0.55))' }}
@@ -488,6 +504,8 @@ export default function GameScreen() {
             <span className="ls-font text-[12px] tracking-wide" style={{ color: COLOR_HEX[turnColor]?.light, textShadow: '0 1px 0 rgba(10,2,20,0.7)' }}>
               {pillText}
             </span>
+          </div>
+          <ChatButton onOpenChat={() => setChatOpen(!chatOpen)} unread={unread} />
           </div>
           {game.mode === 'master' && game.dice.length > 1 && (
             <div className="text-center text-[10px] text-fuchsia-200/50">Master: use both dice · tap a die to switch</div>

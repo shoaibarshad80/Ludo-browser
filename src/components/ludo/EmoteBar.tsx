@@ -1,7 +1,7 @@
 'use client'
 
-// Floating side stack (right edge, over the yard margin — Ludo Star style)
-// + quick chat + chat panel — premium glass styling
+// Compact emote + chat round buttons that flank the turn pill at the
+// bottom of the table (Ludo Star style) + chat panel — premium glass.
 
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -10,25 +10,18 @@ import { CHAT_QUICK, EMOTES } from '@/lib/ludo/constants'
 import type { Color } from '@/lib/ludo/types'
 import { COLOR_HEX } from '@/lib/ludo/board'
 
-export function EmoteBar({
-  onEmote,
-  onOpenChat,
-  unread,
-}: {
-  onEmote: (emoji: string) => void
-  onOpenChat: () => void
-  unread: number
-}) {
+/** round EMOJI button with the palette popping up above it */
+export function EmoteButton({ onEmote }: { onEmote: (emoji: string) => void }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="relative flex flex-col items-center gap-2">
+    <div className="relative">
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, x: 12, scale: 0.85 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 12, scale: 0.85 }}
-            className="ls-panel absolute right-11 top-0 z-50 w-60 rounded-2xl px-3 py-2"
+            initial={{ opacity: 0, y: 10, scale: 0.85 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.85 }}
+            className="ls-panel absolute bottom-12 left-0 z-50 w-60 rounded-2xl px-3 py-2"
           >
             <div className="grid grid-cols-6 gap-1">
               {EMOTES.map((e) => (
@@ -73,23 +66,29 @@ export function EmoteBar({
       >
         <Smile size={18} className="text-amber-300" />
       </motion.button>
-      <motion.button
-        whileTap={{ scale: 0.93 }}
-        onClick={onOpenChat}
-        className="ls-bottom-btn relative grid h-10 w-10 place-items-center rounded-full"
-        aria-label="Open chat"
-      >
-        <MessageCircle size={17} className="text-violet-200" />
-        {unread > 0 && (
-          <span
-            className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full px-1 text-[10px] font-bold text-white"
-            style={{ background: 'linear-gradient(180deg,#f4695f,#b02820)', border: '1.5px solid #fecaca', boxShadow: '0 2px 6px rgba(10,2,20,0.5)' }}
-          >
-            {unread}
-          </span>
-        )}
-      </motion.button>
     </div>
+  )
+}
+
+/** round CHAT button with unread badge */
+export function ChatButton({ onOpenChat, unread }: { onOpenChat: () => void; unread: number }) {
+  return (
+    <motion.button
+      whileTap={{ scale: 0.93 }}
+      onClick={onOpenChat}
+      className="ls-bottom-btn relative grid h-10 w-10 place-items-center rounded-full"
+      aria-label="Open chat"
+    >
+      <MessageCircle size={17} className="text-violet-200" />
+      {unread > 0 && (
+        <span
+          className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full px-1 text-[10px] font-bold text-white"
+          style={{ background: 'linear-gradient(180deg,#f4695f,#b02820)', border: '1.5px solid #fecaca', boxShadow: '0 2px 6px rgba(10,2,20,0.5)' }}
+        >
+          {unread}
+        </span>
+      )}
+    </motion.button>
   )
 }
 
