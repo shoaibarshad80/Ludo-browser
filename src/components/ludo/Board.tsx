@@ -171,7 +171,9 @@ export default function Board({
   // Fit the square board into the REAL available box between the plates.
   // Fixed vh caps can overflow on short screens (then the dice/plates
   // overlap the board) — so measure the wrapper and size by the smaller
-  // of its width/height, still capped at 92vw / 58vh for tall screens.
+  // of its width/height, still capped at 97vw / 68vh. The measured box
+  // governs; caps are only a last-resort safety net, so the board fills
+  // the phone width edge-to-edge like Ludo Star.
   const wrapRef = useRef<HTMLDivElement>(null)
   const [boardPx, setBoardPx] = useState<number | null>(null)
   useEffect(() => {
@@ -179,7 +181,7 @@ export default function Board({
     if (!el) return
     const measure = () => {
       const r = el.getBoundingClientRect()
-      const cap = Math.min(window.innerWidth * 0.92, window.innerHeight * 0.58)
+      const cap = Math.min(window.innerWidth * 0.97, window.innerHeight * 0.68)
       setBoardPx(Math.max(180, Math.floor(Math.min(r.width, r.height, cap))))
     }
     measure()
@@ -244,7 +246,7 @@ export default function Board({
       <motion.div
         animate={shakeControls}
         className="relative select-none"
-        style={{ width: boardPx ? `${boardPx}px` : 'min(92vw, 58vh)', aspectRatio: '1 / 1' }}
+        style={{ width: boardPx ? `${boardPx}px` : 'min(96vw, 64vh)', aspectRatio: '1 / 1' }}
       >
       {/* deep blue leather frame with beveled gold trim (Ludo Star table feel) */}
       <div

@@ -80,14 +80,14 @@ function PlateSeat(p: SeatProps) {
   const c = COLOR_HEX[p.color]
   if (!p.player) {
     // unused seat (2-player games) — invisible spacer keeps the board centered
-    return <div className="h-[68px] w-[106px] shrink-0" aria-hidden />
+    return <div className="h-[62px] w-[98px] shrink-0" aria-hidden />
   }
   const isTurn = p.isTurn
   return (
     <div className={`flex shrink-0 items-center gap-2 ${p.side === 'right' ? 'flex-row-reverse' : ''}`}>
       {/* avatar column */}
       <div className="flex flex-col items-center gap-1">
-        <div className="relative" style={{ width: 48, height: 48 }}>
+        <div className="relative" style={{ width: 44, height: 44 }}>
           {/* ring */}
           <div
             className="absolute inset-0 rounded-full transition-shadow duration-300"
@@ -210,7 +210,7 @@ function PlateSeat(p: SeatProps) {
           selectedDie={p.selectedDie}
           onSelectDie={p.onSelectDie}
           onRoll={p.onRoll}
-          size={50}
+          size={46}
         />
       )}
     </div>
@@ -343,7 +343,7 @@ export default function GameScreen() {
   return (
     <div className="ls-palace relative h-full overflow-hidden">
       <div className="ls-vignette" />
-      <div className="ls-safe-bottom relative z-10 mx-auto flex h-full w-full max-w-[430px] flex-col px-2.5 pb-2 pt-2">
+      <div className="ls-safe-bottom relative z-10 mx-auto flex h-full w-full max-w-[430px] flex-col px-1 pb-1.5 pt-1.5">
         {/* ── top HUD: menu · friends · trophy · sound — coins pill ── */}
         <div className="flex w-full items-center justify-between gap-2">
           <div className="flex items-center gap-1.5">
@@ -443,8 +443,8 @@ export default function GameScreen() {
             {seat('green', 'right')}
           </div>
 
-          {/* the board — with breathing room so dice/plates never touch it */}
-          <div className="flex w-full min-h-0 flex-1 items-center justify-center px-1 py-2">
+          {/* the board — fills the phone width edge-to-edge (Ludo Star) */}
+          <div className="flex w-full min-h-0 flex-1 items-center justify-center py-0.5">
             <Board
               game={game}
               movableTokenIds={movableTokenIds}
@@ -463,7 +463,7 @@ export default function GameScreen() {
 
           {/* crown turn pill */}
           <div
-            className="mt-0.5 flex items-center gap-1.5 rounded-full px-4 py-1"
+            className="mt-0.5 flex items-center gap-1.5 rounded-full px-3.5 py-0.5"
             style={{
               background: 'linear-gradient(180deg, rgba(40,12,62,0.9), rgba(24,6,40,0.9))',
               border: `1.5px solid rgba(246,196,83,0.45)`,
@@ -472,7 +472,7 @@ export default function GameScreen() {
           >
             {game.phase !== 'gameover' && (
               <motion.span
-                style={{ fontSize: 13, filter: 'drop-shadow(0 1.5px 1px rgba(10,2,20,0.55))' }}
+                style={{ fontSize: 12, filter: 'drop-shadow(0 1.5px 1px rgba(10,2,20,0.55))' }}
                 animate={diceRolling ? { rotate: [0, -12, 12, 0] } : { y: [0, -2, 0] }}
                 transition={{ repeat: Infinity, duration: diceRolling ? 0.4 : 1.3, ease: 'easeInOut' }}
                 aria-hidden
@@ -480,7 +480,7 @@ export default function GameScreen() {
                 👑
               </motion.span>
             )}
-            <span className="ls-font text-[13px] tracking-wide" style={{ color: COLOR_HEX[turnColor]?.light, textShadow: '0 1px 0 rgba(10,2,20,0.7)' }}>
+            <span className="ls-font text-[12px] tracking-wide" style={{ color: COLOR_HEX[turnColor]?.light, textShadow: '0 1px 0 rgba(10,2,20,0.7)' }}>
               {pillText}
             </span>
           </div>
