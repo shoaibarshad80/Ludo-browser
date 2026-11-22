@@ -178,6 +178,18 @@ let pendingTimer: ReturnType<typeof setTimeout> | null = null
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
 
+/** randomized human-like "thinking" pause for bots (ms between a..b) */
+const botThink = (a: number, b: number) => Math.round(a + Math.random() * (b - a))
+
+/** bots occasionally emote at key moments (Ludo Star style taunts) */
+const BOT_EMOTES: Record<'capture' | 'finish' | 'victim' | 'forfeit', string[]> = {
+  capture: ['😈', '😏', '😂'],
+  finish: ['🎉', '🥳', '😁'],
+  victim: ['😭', '😱', '😵'],
+  forfeit: ['🙈', '😅'],
+}
+const botEmoteLastAt: Partial<Record<Color, number>> = {}
+
 function uid() {
   return Math.random().toString(36).slice(2, 10)
 }
@@ -355,7 +367,19 @@ export const useLudo = create<LudoStore>((set, get) => {
     saveProfile(get().profile)
   }
 
-  /** After every applied move / pass: decide who acts next (local games only). */
+  /** bots emote into the same bubble channel the UI already renders. */
+  function botEmote(color: Color, kind: keyof typeof BOT_EMOTES, prob: number) {
+    if (Math.random() > prob) return
+    const now = Date.now()
+    // per-bot cooldown so taunts never feel spammy
+    if (now - (botEmoteLastAt[color] ?? 0) < 4500) return
+    botEmoteLastAt[color] = now
+    const pool = BOT_EMOTES[kind]
+    const emoji = pool[Math.floor(Math.random() * pool.length)]
+    sfx.emote()
+    set((s) => ({ emotes: [...s.emotes, { id: msgId++, color, emoji, ts: now }].slice(-6) }))
+  }
+
   function scheduleNext() {
     const s = get()
     if (!s.game || s.game.phase === 'gameover' || s.session?.online) return
@@ -366,7 +390,7 @@ export const useLudo = create<LudoStore>((set, get) => {
     if (g.phase === 'roll') {
       if (cur.isBot) {
         set({ canRoll: false, turnDeadline: null })
-        schedule(400, () => void botRoll(gen))
+        schedule(botThink(900, 1500), () => void botRoll(gen))
       } else {
         set({ canRoll: true, movableTokenIds: [], selectedDie: 0, turnDeadline: null })
         startTurnTimer()
@@ -381,12 +405,12 @@ export const useLudo = create<LudoStore>((set, get) => {
         sfx.pass()
         const passed = passTurn(g)
         set({ game: passed })
-        schedule(550, () => scheduleNext())
+        schedule(botThink(750, 1100), () => scheduleNext())
         return
       }
       if (cur.isBot) {
         set({ canRoll: false, turnDeadline: null })
-        schedule(280, () => void botMove(gen))
+        schedule(botThink(700, 1250), () => void botMove(gen))
         return
       }
       // human: compute movable tokens for selected die; auto-switch die if needed
@@ -428,11 +452,23 @@ export const useLudo = create<LudoStore>((set, get) => {
     if (gen !== loopGen) return
     await sleep(80)
     const result = applyMove(g0, move)
+    const mover = g0.players[g0.turn]
     if (move.captures.length > 0) {
       sfx.capture()
       pushFloat(`Captured ${move.captures.length} token${move.captures.length > 1 ? 's' : ''}!`, 'capture')
     }
     if (move.finishes) sfx.finish()
+    // bot banter: taunt on capture/finish, victims cry, all throttled
+    if (mover.isBot) {
+      if (move.captures.length > 0) botEmote(mover.color, 'capture', 0.38)
+      if (move.finishes) botEmote(mover.color, 'finish', 0.5)
+      if (move.captures.length > 0) {
+        for (const victim of g0.players) {
+          if (victim.color === mover.color || !victim.isBot) continue
+          if (victim.tokens.some((t) => move.captures.includes(t.id))) botEmote(victim.color, 'victim', 0.42)
+        }
+      }
+    }
     set({ game: result, animating: false, diceValues: [] })
     if (result.phase === 'gameover' && result.winner) {
       finishGame(result)
@@ -454,12 +490,13 @@ export const useLudo = create<LudoStore>((set, get) => {
     if (rolled[0] === 6 || (state.mode === 'master' && rolled.every((d) => d === 6))) sfx.six()
     if (forfeited) {
       pushFloat(`Three sixes! ${g.players[g.turn].name} loses the turn`, 'forfeit')
+      if (g.players[g.turn].isBot) botEmote(g.players[g.turn].color, 'forfeit', 0.6)
       const passed = passTurn(state)
       set({ game: passed })
       schedule(750, () => scheduleNext())
       return
     }
-    await sleep(140)
+    await sleep(botThink(250, 550))
     if (gen !== loopGen) return
     scheduleNext()
   }
@@ -472,10 +509,14 @@ export const useLudo = create<LudoStore>((set, get) => {
     if (!move) {
       const passed = passTurn(g)
       set({ game: passed })
-      schedule(550, () => scheduleNext())
+      schedule(botThink(750, 1100), () => scheduleNext())
       return
     }
     set({ selectedDie: move.dieIndex, diceValues: [...g.dice] })
+    // humans snap at decisive plays and dawdle on routine steps
+    const decisive = move.captures.length > 0 || move.finishes
+    await sleep(decisive ? botThink(140, 300) : botThink(240, 500))
+    if (gen !== loopGen) return
     await animateAndApply(g, move)
   }
 

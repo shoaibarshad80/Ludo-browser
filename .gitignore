@@ -60,3 +60,7 @@ db/
 # local tool artifacts & deliverables
 tool-results/
 download/
+
+# deploy helpers hold secrets — never commit
+scripts/deploy_ghpages.sh
+.deploy_token
