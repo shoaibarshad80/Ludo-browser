@@ -53,4 +53,8 @@ export const Pawn2x3D = ({ size = 64 }: { size?: number }) => <Art3D name="pawn2
 export const Pawn4x3D = ({ size = 64 }: { size?: number }) => <Art3D name="pawn4" size={size} />
 export const Robot3D = ({ size = 64 }: { size?: number }) => <Art3D name="robot" size={size} />
 export const Crown3D = ({ size = 40 }: { size?: number }) => <Art3D name="crown" size={size} />
+/** Hero ludo-board emblem for the lobby (no per-pixel drop shadow — CSS halo instead). */
+export const Logo3D = ({ size = 120, className }: { size?: number; className?: string }) => (
+  <Art3D name="logo" size={size} shadow={false} className={className} />
+)
 export const Gift3D = ({ size = 26 }: { size?: number }) => <Art3D name="gift" size={size} />

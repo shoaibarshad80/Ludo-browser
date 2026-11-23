@@ -6,28 +6,31 @@
 // column identical on desktop. Magenta/purple play-first theme.
 // Focused play area — ONLY the four playable modes are shown:
 //   2 PLAYER · 4 PLAYER · PRIVATE TABLE · OFFLINE
-// Chrome kept from the reference: top currency bar, player row,
-// left rail, watermark, Shop·Friends·Home·Collections·Chest nav.
-// Every existing action is preserved (modes, stakes, practice,
-// daily reward, friends, leaderboard, profile, sound, rooms).
+// Chrome: top currency bar, player row, a centered LUDO hero
+// emblem and a slim Shop·Friends·Home·Collections·Chest nav.
+// Fluff icons (bell, connection dot, left rail, tile badges)
+// were removed — their features stay reachable via the tabs
+// and chips they mirrored. All motion is transform-only CSS
+// (composited, no JS loop) so the lobby stays smooth on low-end
+// phones. Every existing action is preserved (modes, stakes,
+// practice, daily reward, friends, leaderboard, sound, rooms).
 // ============================================================
 
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  Bell, Bot, CalendarDays, Check, ChevronRight, Copy, Flag, Gift, Globe,
+  Bot, Check, ChevronRight, Copy, Flag, Gift, Globe,
   KeyRound, Loader2, Play, Send, Settings, Trophy,
   Users, Volume2, VolumeX, Zap,
 } from 'lucide-react'
 import {
-  NavShop, NavFriends, NavHome, NavCollections,
-  RailEvents, RailClubs,
-  IconStarGold, HomeGlyph,
-  CrownArt, DecoDie, DecoToken, ChestArt,
+  NavShop, NavFriends, HomeGlyph, NavCollections,
+  IconStarGold,
+  DecoDie, DecoToken, ChestArt,
 } from '@/components/ludo/icons'
 import { Art2P, Art4P, ArtPrivate, ArtOffline } from '@/components/ludo/MenuArt'
 import {
-  Coin3D, Gem3D, Chest3D, Trophy3D, Dice3D, Pawn2x3D, Pawn4x3D, Robot3D, Crown3D, Gift3D,
+  Coin3D, Gem3D, Chest3D, Pawn2x3D, Pawn4x3D, Robot3D, Crown3D, Logo3D,
 } from '@/components/ludo/art3d'
 import HistoryGraph from '@/components/ludo/HistoryGraph'
 import { useLudo } from '@/stores/ludoStore'
@@ -39,12 +42,6 @@ import type { GameMode } from '@/lib/ludo/types'
 
 type LobbyTab = 'home' | 'friends' | 'collections' | 'chest' | 'shop'
 type SheetKind = null | 'table2' | 'table4' | 'private' | 'offline' | 'ranks'
-
-const EVENTS = [
-  { icon: <Gem3D size={20} />, title: 'Season 1 is live', text: 'Climb the leaderboard and collect gems for every win.' },
-  { icon: <Gift3D size={20} />, title: 'Daily login streak', text: 'Claim growing coin rewards every single day.' },
-  { icon: <Crown3D size={22} />, title: 'Weekend tables', text: 'Bigger pots on Master mode every Saturday & Sunday.' },
-]
 
 // ---------- shared atoms ----------
 
@@ -109,7 +106,6 @@ export default function MenuScreen() {
   const daily = useLudo((s) => s.daily)
   const startLocalGame = useLudo((s) => s.startLocalGame)
   const onlineConnect = useLudo((s) => s.onlineConnect)
-  const onlineStatus = useLudo((s) => s.onlineStatus)
   const onlineError = useLudo((s) => s.onlineError)
   const onlineQuick = useLudo((s) => s.onlineQuick)
   const onlineCreate = useLudo((s) => s.onlineCreate)
@@ -123,7 +119,6 @@ export default function MenuScreen() {
   const [stake, setStake] = useState<number>(100)
   const [joinCode, setJoinCode] = useState('')
   const [busy, setBusy] = useState(false)
-  const [eventsOpen, setEventsOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [copied, setCopied] = useState(false)
   const [offlineSeats, setOfflineSeats] = useState<2 | 4>(4)
@@ -233,27 +228,11 @@ export default function MenuScreen() {
             valueClass="text-teal-100"
           />
           <div className="ml-auto flex items-center gap-1.5">
-            {/* connection dot */}
-            <span
-              className="h-2 w-2 rounded-full ring-2 ring-white/20"
-              style={{ background: onlineStatus === 'connected' || onlineStatus === 'idle' || onlineStatus === 'lobby' ? '#4ade80' : '#f6c453' }}
-              title={onlineStatus === 'connected' ? 'Server online' : 'Connecting...'}
-            />
-            {/* notifications — same events panel as the rail button */}
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={() => { setEventsOpen((o) => !o); setSettingsOpen(false) }}
-              className="ls-lobby-chip relative grid h-9 w-9 place-items-center rounded-full text-fuchsia-100"
-              aria-label="Notifications"
-            >
-              <Bell size={19} />
-              <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-rose-500 px-1 text-[8px] text-white ring-2 ring-[#2b0a4a]">6</span>
-            </motion.button>
             {/* settings */}
             <div className="relative">
               <motion.button
                 whileTap={{ scale: 0.9 }}
-                onClick={() => { setSettingsOpen((o) => !o); setEventsOpen(false) }}
+                onClick={() => { setSettingsOpen((o) => !o) }}
                 className="ls-lobby-chip grid h-9 w-9 place-items-center rounded-full text-fuchsia-100"
                 aria-label="Settings"
               >
@@ -311,12 +290,13 @@ export default function MenuScreen() {
               style={{ background: 'rgba(255,255,255,0.14)', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.35)' }}
               title={`XP ${lvl.xpNow}/${lvl.xpNeed} to level ${lvl.level + 1}`}
             >
-              <motion.div
-                className="h-full rounded-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${Math.max(6, lvl.pct)}%` }}
-                transition={{ duration: 0.9, ease: 'easeOut', delay: 0.25 }}
-                style={{ background: 'linear-gradient(90deg,#ffd76e,#ff9d3c)', boxShadow: '0 0 6px rgba(255,180,60,0.7)' }}
+              <div
+                className="ls-xp-fill h-full rounded-full"
+                style={{
+                  width: `${Math.max(6, lvl.pct)}%`,
+                  background: 'linear-gradient(90deg,#ffd76e,#ff9d3c)',
+                  boxShadow: '0 0 6px rgba(255,180,60,0.7)',
+                }}
               />
             </div>
           </div>
@@ -329,183 +309,63 @@ export default function MenuScreen() {
           </span>
         </div>
 
-        {/* ============ LEFT RAIL (events / ranks / clubs) ============ */}
-        <div className="absolute left-1.5 top-[132px] z-30 flex flex-col items-center gap-2.5">
-          <div className="relative">
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={() => { setEventsOpen((o) => !o); setSettingsOpen(false) }}
-              className="grid h-11 w-11 place-items-center rounded-full"
-              aria-label="Events"
-            >
-              <RailEvents size={34} />
-              <span className="ls-font absolute -right-0.5 -top-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-rose-500 px-1 text-[9px] text-white ring-2 ring-[#7c1f6e] shadow-lg">6</span>
-            </motion.button>
-            <AnimatePresence>
-              {eventsOpen && (
-                <motion.div
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -8 }}
-                  className="ls-sheet absolute left-12 top-0 z-50 w-64 rounded-2xl p-2.5"
-                >
-                  <p className="ls-font mb-1.5 text-xs text-amber-200">EVENTS</p>
-                  {EVENTS.map((e) => (
-                    <div key={e.title} className="flex items-start gap-2 rounded-xl px-2 py-1.5 hover:bg-white/5">
-                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-white/10 text-sm">{e.icon}</span>
-                      <div>
-                        <p className="ls-font text-[11px] text-white">{e.title}</p>
-                        <p className="text-[9px] leading-snug text-fuchsia-100/60">{e.text}</p>
-                      </div>
-                    </div>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => setSheet('ranks')}
-            className="grid h-11 w-11 place-items-center rounded-full"
-            aria-label="Leaderboard"
-          >
-            <Trophy3D size={30} />
-          </motion.button>
-
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => setTab('friends')}
-            className="flex flex-col items-center gap-0.5"
-            aria-label="Clubs and friends"
-          >
-            <span className="relative grid h-12 w-12 place-items-center rounded-full">
-              <RailClubs size={38} />
-              {onlineFriends > 0 && (
-                <span className="ls-font absolute -right-0.5 -top-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-rose-500 px-1 text-[9px] text-white ring-2 ring-[#7c1f6e] shadow-lg">{onlineFriends}</span>
-              )}
-            </span>
-            <span className="ls-font text-[8px] tracking-widest text-fuchsia-100/80">CLUBS</span>
-          </motion.button>
-
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => setTab('chest')}
-            className="flex flex-col items-center gap-0.5"
-            aria-label="Daily rewards"
-          >
-            <span
-              className="grid h-11 w-11 place-items-center rounded-full"
-              style={{
-                background: 'linear-gradient(180deg,#7a2b6f,#4c1450)',
-                border: '2px solid rgba(255,255,255,0.28)',
-                boxShadow: '0 3px 8px rgba(20,4,45,0.5), inset 0 1px 0 rgba(255,255,255,0.25)',
-              }}
-            >
-              <CalendarDays size={18} className="text-amber-200" />
-            </span>
-            <span className="ls-font text-[8px] tracking-widest text-fuchsia-100/80">DAILY</span>
-          </motion.button>
-        </div>
-
-        {/* ============ MAIN (watermark + play tiles) ============ */}
+        {/* ============ MAIN (LUDO hero + play tiles) ============ */}
         <main className="relative flex min-h-0 flex-1 flex-col px-3">
-          {/* watermark */}
-          <div className="pointer-events-none absolute inset-0 grid place-items-center" aria-hidden>
-            <div className="flex -translate-y-9 select-none flex-col items-center" style={{ opacity: 0.17 }}>
-              <CrownArt size={34} />
-              <span className="ls-font text-[62px] leading-[0.92] text-white" style={{ textShadow: '0 4px 0 rgba(80,15,75,0.45)' }}>LUDO</span>
-              <span className="ls-font text-lg leading-none tracking-[0.46em] text-white" style={{ marginRight: '-0.46em', textShadow: '0 2px 0 rgba(80,15,75,0.45)' }}>STAR</span>
+          {/* LUDO hero — emblem + wordmark (transform-only float) */}
+          <div className="pointer-events-none relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center pb-1.5">
+            <div className="ls-hero-float relative">
+              <span aria-hidden className="ls-hero-halo absolute -inset-4 rounded-[34%]" />
+              <div className="aspect-square h-[min(23vh,100px)]">
+                <Logo3D size={100} className="h-full w-full" />
+              </div>
             </div>
+            <h1 className="ls-font ls-hero-word">LUDO</h1>
+            <p className="ls-font ls-hero-star">STAR</p>
           </div>
 
-          {/* floating deco (dice + pawns) */}
-          <motion.div
-            className="pointer-events-none absolute left-6 top-[38%] z-0"
-            animate={{ y: [0, -9, 0], rotate: [0, 5, 0] }}
-            transition={{ repeat: Infinity, duration: 5.2, ease: 'easeInOut' }}
-            aria-hidden
-          >
-            <Dice3D size={46} />
-          </motion.div>
-          <motion.div
-            className="pointer-events-none absolute right-8 top-[30%] z-0"
-            animate={{ y: [0, -11, 0], rotate: [0, -6, 0] }}
-            transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut', delay: 0.7 }}
-            aria-hidden
-          >
-            <DecoDie value={3} size={32} tilt={18} />
-          </motion.div>
-          <motion.div
-            className="pointer-events-none absolute right-[34%] top-[20%] z-0"
-            animate={{ y: [0, -7, 0] }}
-            transition={{ repeat: Infinity, duration: 4.6, ease: 'easeInOut', delay: 0.3 }}
-            aria-hidden
-          >
-            <DecoToken color="yellow" size={22} />
-          </motion.div>
-          <motion.div
-            className="pointer-events-none absolute left-[30%] top-[52%] z-0"
-            animate={{ y: [0, -6, 0] }}
-            transition={{ repeat: Infinity, duration: 4.2, ease: 'easeInOut', delay: 1 }}
-            aria-hidden
-          >
-            <DecoToken color="green" size={19} />
-          </motion.div>
-          <motion.div
-            className="pointer-events-none absolute right-[16%] top-[58%] z-0"
-            animate={{ y: [0, -8, 0] }}
-            transition={{ repeat: Infinity, duration: 5, ease: 'easeInOut', delay: 0.4 }}
-            aria-hidden
-          >
-            <DecoToken color="blue" size={17} />
-          </motion.div>
+          {/* two CSS-only floaters (composited transform, no JS loop) */}
+          <div className="ls-float-a pointer-events-none absolute left-5 top-[30%] z-0" aria-hidden>
+            <DecoDie value={5} size={30} tilt={14} />
+          </div>
+          <div className="ls-float-b pointer-events-none absolute right-6 top-[54%] z-0" aria-hidden>
+            <DecoToken color="blue" size={20} />
+          </div>
 
-          <div className="flex-1" />
-
-          {/* big tiles */}
+          {/* first row — 2 PLAYER + PRIVATE TABLE */}
           <div className="relative z-10 grid grid-cols-2 gap-2.5">
-            <motion.button
-              whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.02 }} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05, duration: 0.35, ease: 'easeOut' }}
+            <button
               onClick={() => { setSheet('table2'); setSheetMode('classic') }}
-              className="ls-tile-gold ls-shine relative flex h-[min(42vw,25vh,176px)] flex-col overflow-hidden rounded-2xl p-1.5"
+              className="ls-tile-gold ls-shine ls-rise relative flex h-[min(42vw,25vh,176px)] flex-col overflow-hidden rounded-2xl p-1.5"
+              style={{ '--d': '60ms' } as React.CSSProperties}
               aria-label="Play 2 player"
             >
-              <motion.span
-                className="pointer-events-none absolute -right-6 -top-10 h-24 w-24 rounded-full bg-white/25 blur-2xl"
-                animate={{ scale: [1, 1.25, 1] }}
-                transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
-              />
               <div className="relative min-h-0 flex-1">
                 <div className="grid h-full place-items-center pb-0.5"><Pawn2x3D size={84} /></div>
                 <PlayChip />
               </div>
               <span className="ls-font pb-1 text-center text-[15px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(150,80,0,0.7)' }}>2 PLAYER</span>
-            </motion.button>
+            </button>
 
-            <motion.button
-              whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.02 }} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12, duration: 0.35, ease: 'easeOut' }}
+            <button
               onClick={() => setSheet('private')}
-              className="ls-tile-purple ls-shine relative flex h-[min(42vw,25vh,176px)] flex-col overflow-hidden rounded-2xl p-1.5"
+              className="ls-tile-purple ls-shine ls-rise relative flex h-[min(42vw,25vh,176px)] flex-col overflow-hidden rounded-2xl p-1.5"
+              style={{ '--d': '140ms' } as React.CSSProperties}
               aria-label="Open private table"
             >
-              <span className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-black/35 text-amber-200" title="Invite with a code">
-                <KeyRound size={11} />
-              </span>
               <div className="relative min-h-0 flex-1">
                 <div className="grid h-full place-items-center pb-0.5"><Crown3D size={74} /></div>
                 <PlayChip />
               </div>
               <span className="ls-font pb-1 text-center text-[13px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(40,10,90,0.7)' }}>PRIVATE TABLE</span>
-            </motion.button>
+            </button>
           </div>
 
           {/* second row — 4 PLAYER + OFFLINE */}
           <div className="relative z-10 mt-2.5 grid grid-cols-2 gap-2.5 pb-1.5">
-            <motion.button
-              whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.02 }} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.19, duration: 0.35, ease: 'easeOut' }}
+            <button
               onClick={() => { setSheet('table4'); setSheetMode('classic') }}
-              className="ls-tile-purple ls-shine relative flex h-[min(32vw,18vh,132px)] flex-col overflow-hidden rounded-2xl p-1.5"
+              className="ls-tile-purple ls-shine ls-rise relative flex h-[min(32vw,18vh,132px)] flex-col overflow-hidden rounded-2xl p-1.5"
+              style={{ '--d': '220ms' } as React.CSSProperties}
               aria-label="Play 4 player"
             >
               <div className="relative min-h-0 flex-1">
@@ -513,12 +373,12 @@ export default function MenuScreen() {
                 <PlayChip />
               </div>
               <span className="ls-font pb-1 text-center text-[13px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(40,10,90,0.7)' }}>4 PLAYER</span>
-            </motion.button>
+            </button>
 
-            <motion.button
-              whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.02 }} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.26, duration: 0.35, ease: 'easeOut' }}
+            <button
               onClick={() => { setSheet('offline'); setSheetMode('classic') }}
-              className="ls-tile-green ls-shine relative flex h-[min(32vw,18vh,132px)] flex-col overflow-hidden rounded-2xl p-1.5"
+              className="ls-tile-green ls-shine ls-rise relative flex h-[min(32vw,18vh,132px)] flex-col overflow-hidden rounded-2xl p-1.5"
+              style={{ '--d': '300ms' } as React.CSSProperties}
               aria-label="Play offline — bots or pass and play"
             >
               <div className="relative min-h-0 flex-1">
@@ -526,44 +386,40 @@ export default function MenuScreen() {
                 <PlayChip />
               </div>
               <span className="ls-font pb-1 text-center text-[13px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(10,60,30,0.7)' }}>OFFLINE</span>
-            </motion.button>
+            </button>
           </div>
         </main>
 
-        {/* ============ BOTTOM NAV ============ */}
-        <nav className="ls-nav-bar relative z-40 border-t border-white/10">
-          <div className="mx-auto grid w-full max-w-[430px] grid-cols-5 px-1.5">
+        {/* ============ BOTTOM NAV — slim bar, gold raised HOME ============ */}
+        <nav className="ls-nav-bar relative z-40">
+          <div className="mx-auto grid w-full max-w-[430px] grid-cols-5 items-end px-2">
             {([
-              { id: 'shop', icon: <NavShop size={30} />, label: 'Shop' },
-              { id: 'friends', icon: <NavFriends size={30} />, label: 'Friends' },
+              { id: 'shop', icon: <NavShop size={27} />, label: 'Shop' },
+              { id: 'friends', icon: <NavFriends size={27} />, label: 'Friends' },
               { id: 'home', icon: <HomeGlyph size={30} />, label: 'Home', raised: true },
-              { id: 'collections', icon: <NavCollections size={30} />, label: 'Collections', badge: unlockedAchievements },
-              { id: 'chest', icon: <Chest3D size={30} />, label: 'Chest', badge: dailyClaimable ? 1 : undefined },
+              { id: 'collections', icon: <NavCollections size={27} />, label: 'Trophies', badge: unlockedAchievements },
+              { id: 'chest', icon: <Chest3D size={27} />, label: 'Chest', badge: dailyClaimable ? 1 : undefined },
             ] as Array<{ id: LobbyTab; icon: React.ReactNode; label: string; raised?: boolean; badge?: number }>).map((item) => {
               const active = tab === item.id
               if (item.raised) {
                 return (
-                  <button key={item.id} onClick={() => setTab(item.id)} className="relative flex flex-col items-center" aria-current={active ? 'page' : undefined}>
-                    <motion.span
-                      whileTap={{ scale: 0.9 }}
-                      className={`ls-tile-purple -mt-7 grid h-14 w-16 place-items-center rounded-2xl text-white ${active ? 'ls-nav-home-glow' : ''}`}
-                      style={{ boxShadow: '0 6px 0 #3b1580, 0 12px 20px rgba(20,5,50,0.55), inset 0 2px 0 rgba(255,255,255,0.35)' }}
-                    >
+                  <button key={item.id} onClick={() => setTab(item.id)} className="ls-nav-home-btn flex flex-col items-center" aria-current={active ? 'page' : undefined}>
+                    <span className={`ls-nav-home ${active ? 'ls-nav-home-glow' : ''}`}>
                       {item.icon}
-                    </motion.span>
-                    <span className={`ls-font mt-0.5 text-[9px] ${active ? 'text-white' : 'text-fuchsia-100/70'}`}>{item.label}</span>
+                    </span>
+                    <span className={`ls-font mt-1 text-[10px] leading-none ${active ? 'text-amber-200' : 'text-fuchsia-100/60'}`}>{item.label}</span>
                   </button>
                 )
               }
               return (
-                <button key={item.id} onClick={() => setTab(item.id)} className="relative flex flex-col items-center gap-0.5 py-1.5" aria-current={active ? 'page' : undefined}>
-                  <motion.span whileTap={{ scale: 0.85 }} className={`relative grid h-8 w-8 place-items-center rounded-xl transition ${active ? 'bg-white/15 text-white' : 'text-fuchsia-100/55'}`}>
+                <button key={item.id} onClick={() => setTab(item.id)} className="ls-nav-item flex flex-col items-center gap-1 pt-1.5" aria-current={active ? 'page' : undefined}>
+                  <span className={`ls-nav-ico ${active ? 'ls-nav-ico-active' : ''}`}>
                     {item.icon}
                     {item.badge ? (
-                      <span className="ls-font absolute -right-1.5 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-rose-500 px-1 text-[8px] text-white ring-2 ring-[#2b0a4a]">{item.badge}</span>
+                      <span className="ls-nav-badge ls-font">{item.badge}</span>
                     ) : null}
-                  </motion.span>
-                  <span className={`ls-font text-[9px] ${active ? 'text-white' : 'text-fuchsia-100/50'}`}>{item.label}</span>
+                  </span>
+                  <span className={`ls-font text-[9.5px] leading-none ${active ? 'text-white' : 'text-fuchsia-100/55'}`}>{item.label}</span>
                 </button>
               )
             })}
@@ -580,7 +436,7 @@ export default function MenuScreen() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 16 }}
             transition={{ duration: 0.18 }}
-            className="absolute inset-0 z-30 mx-auto flex w-full max-w-[430px] flex-col px-3 pb-[86px] pt-3"
+            className="absolute inset-0 z-30 mx-auto flex w-full max-w-[430px] flex-col px-3 pb-[92px] pt-[106px]"
           >
             <div className="mb-2 flex items-center justify-between">
               <h2 className="ls-font text-lg text-white">
