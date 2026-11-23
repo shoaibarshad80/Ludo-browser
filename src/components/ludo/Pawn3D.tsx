@@ -97,7 +97,10 @@ export default function Pawn3D({ color, glow, tap, onClick, tokenId, uid, uprigh
   const g = (name: string) => `${name}-${uid}`
 
   const svg = (
-    <svg viewBox="0 0 64 64" className="h-full w-full overflow-visible" style={{ filter: 'drop-shadow(0 2px 2.5px rgba(8,10,30,0.38))' }}>
+    // NOTE: no CSS drop-shadow filter here — 16 animated pawn filters
+    // re-rasterize every frame on mobile and were the main lag source.
+    // The pawn keeps its painted-in contact shadow (the `sh` ellipse).
+    <svg viewBox="0 0 64 64" className="h-full w-full overflow-visible">
       <defs>
         <radialGradient id={g('sh')} cx="0.5" cy="0.5" r="0.5">
           <stop offset="0" stopColor="rgba(6,8,24,0.55)" />

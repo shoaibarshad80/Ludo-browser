@@ -6,6 +6,9 @@ import type { NextConfig } from "next";
 const isStatic = process.env.STATIC_EXPORT === "1";
 
 const nextConfig: NextConfig = {
+  // client-visible mirror of BASE_PATH so components can prefix assets
+  // (e.g. the velvet table backdrop photo) in both export and server builds
+  env: { NEXT_PUBLIC_BASE_PATH: process.env.BASE_PATH || "" },
   output: isStatic ? "export" : "standalone",
   ...(isStatic
     ? {

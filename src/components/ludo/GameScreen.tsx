@@ -276,12 +276,16 @@ export default function GameScreen() {
     void autoPlay(true)
   }, [now, turnDeadline, game, winData, autoPlay])
 
-  // emotes expire
+  // emotes expire — the clock only runs WHILE a bubble can still be on
+  // screen. A permanent 300ms interval here used to re-render the whole
+  // game screen ~3x/sec even during quiet stretches (visible lag on phones).
   const [nowEmote, setNowEmote] = useState(0)
+  const hasFreshEmote = useMemo(() => emotes.some((e) => Date.now() - e.ts < 4400), [emotes])
   useEffect(() => {
+    if (!hasFreshEmote) return
     const t = setInterval(() => setNowEmote(Date.now()), 300)
     return () => clearInterval(t)
-  }, [])
+  }, [hasFreshEmote])
 
   const visibleEmotes = useMemo(
     () => emotes.filter((e) => Date.now() - e.ts < 4200),
@@ -476,7 +480,7 @@ export default function GameScreen() {
               interactiveColor={interactiveColor}
               animating={animating}
               rotate={boardRot}
-              emotes={visibleEmotes.map((e) => ({ id: e.id, color: e.color, emoji: e.emoji }))}
+              emotes={visibleEmotes.map((e) => ({ id: e.id, color: e.color, emoji: e.emoji, text: e.text }))}
             />
           </div>
 

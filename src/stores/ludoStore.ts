@@ -57,6 +57,8 @@ export interface EmoteMsg {
   id: number
   color: Color
   emoji: string
+  /** true when this is a typed chat message rendered as a speech pill */
+  text?: boolean
   /** wall-clock ms when sent — bubbles stay visible a few seconds */
   ts: number
 }
@@ -976,7 +978,12 @@ export const useLudo = create<LudoStore>((set, get) => {
       const s = get()
       if (!text.trim()) return
       const color = s.session?.youColor ?? (s.game ? s.game.players[s.game.turn].color : 'red')
-      set((st) => ({ chat: [...st.chat, { id: msgId++, color, name: s.profile.name, text: text.trim(), ts: Date.now() }].slice(-50) }))
+      set((st) => ({
+        chat: [...st.chat, { id: msgId++, color, name: s.profile.name, text: text.trim(), ts: Date.now() }].slice(-50),
+        // the message ALSO pops as a speech pill over the sender's yard
+        // (board emote channel) and lingers ~4s — like Ludo Star bubbles
+        emotes: [...st.emotes, { id: msgId++, color, emoji: text.trim(), ts: Date.now(), text: true }].slice(-6),
+      }))
       if (s.session?.online) online.emit('game:chat', { text: text.trim() })
     },
 

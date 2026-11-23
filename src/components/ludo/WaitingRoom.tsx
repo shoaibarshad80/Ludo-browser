@@ -38,7 +38,7 @@ export default function WaitingRoom() {
 
   if (!lobby) {
     return (
-      <div className="ls-bg grid h-full place-items-center">
+      <div className="grid h-full place-items-center">
         <div className="ls-panel flex items-center gap-3 rounded-2xl px-6 py-4 text-sm text-indigo-100">
           <Loader2 size={16} className="animate-spin text-violet-300" />
           Leaving room...
@@ -59,7 +59,7 @@ export default function WaitingRoom() {
   }
 
   return (
-    <div className="ls-bg relative grid h-full place-items-center overflow-hidden px-4 py-8">
+    <div className="relative grid h-full place-items-center overflow-hidden px-4 py-8">
       <div className="ls-starfield" />
       <motion.div
         className="pointer-events-none absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-violet-600/20 blur-3xl"

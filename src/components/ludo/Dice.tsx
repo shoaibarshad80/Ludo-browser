@@ -10,6 +10,7 @@
 // shows two mini dice. Same props/behavior as before.
 // ============================================================
 
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import type { Color } from '@/lib/ludo/types'
 import { COLOR_HEX } from '@/lib/ludo/board'
@@ -97,6 +98,20 @@ export function DieFace({
       ))}
     </div>
   )
+}
+
+/**
+ * Face the die shows WHILE rolling: the pips flicker through random
+ * values every ~90ms inside the 3D tumble, exactly like a real die
+ * spinning on the felt (the old code showed a frozen "3").
+ */
+function RollingDieFace({ glowColor }: { glowColor?: string }) {
+  const [v, setV] = useState(5)
+  useEffect(() => {
+    const t = setInterval(() => setV(1 + Math.floor(Math.random() * 6)), 90)
+    return () => clearInterval(t)
+  }, [])
+  return <DieFace value={v} glowColor={glowColor} />
 }
 
 export interface DicePlateProps {
@@ -189,7 +204,7 @@ export function DicePlate({
               transition={{ repeat: Infinity, duration: 0.62, ease: 'easeInOut' }}
               style={{ transformStyle: 'preserve-3d' }}
             >
-              <DieFace value={3} glowColor={c.glow} />
+              <RollingDieFace glowColor={c.glow} />
             </motion.div>
           </div>
         ) : twoDice ? (

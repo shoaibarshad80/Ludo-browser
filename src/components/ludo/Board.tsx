@@ -42,7 +42,7 @@ interface BoardProps {
    */
   interactiveColor: Color | null
   animating: boolean
-  emotes: Array<{ id: number; color: Color; emoji: string }>
+  emotes: Array<{ id: number; color: Color; emoji: string; text?: boolean }>
   /** degrees (clockwise) to spin the board view so the viewing player's
    *  yard sits bottom-left under their plate (Ludo Star per-player view).
    *  Pawns & emote bubbles are counter-rotated to stay upright. */
@@ -647,8 +647,14 @@ export default function Board({
                       initial={false}
                       animate={hopping ? 'hop' : 'idle'}
                       variants={{
-                        idle: { y: 0 },
-                        hop: { y: [0, -11, 0], transition: { duration: 0.46, times: [0, 0.42, 1], ease: 'easeInOut' } },
+                        idle: { y: 0, rotate: 0 },
+                        // deeper arc + a cheeky mid-air twist so each hop
+                        // reads like a real pawn bounce on the felt
+                        hop: {
+                          y: [0, -14, 0],
+                          rotate: [0, -7, 5, 0],
+                          transition: { duration: 0.52, times: [0, 0.4, 0.72, 1], ease: 'easeInOut' },
+                        },
                       }}
                     >
                       <Pawn3D
@@ -874,7 +880,8 @@ export default function Board({
               const base = YARD_BASE[e.color]
               // text quick-chats ride the emote channel — render as a speech pill
               // anchored toward the board center; real emoji stay round bubbles
-              if (e.emoji.length > 2) {
+              // typed chat messages are flagged; bot quick-chats are words
+              if (e.text || e.emoji.length > 2) {
                 const a = TEXT_PILL_POS[e.color]
                 return (
                   <motion.div
@@ -887,12 +894,12 @@ export default function Board({
                     style={{
                       left: pct(a.c),
                       top: pct(a.r),
-                      width: pct(5.6),
+                      width: pct(6.6),
                       rotate: upright,
                       background: 'linear-gradient(180deg,#ffffff,#eef1fb)',
                       border: `2px solid ${COLOR_HEX[e.color].main}`,
                       boxShadow: `0 4px 10px rgba(10,14,40,0.4), 0 0 12px ${COLOR_HEX[e.color].glow}55`,
-                      fontSize: 'min(2.6vw, 11.5px)',
+                      fontSize: 'min(2.8vw, 12.5px)',
                       color: '#1e2440',
                     }}
                   >

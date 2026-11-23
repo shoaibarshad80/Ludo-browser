@@ -16,6 +16,9 @@ const VIEWS: Record<string, React.ComponentType> = {
   game: GameScreen,
 }
 
+// premium velvet-table photo backdrop (static asset, next to logo.svg)
+const BG_TABLE_IMG = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/bg-table.png`
+
 export default function LudoApp() {
   const view = useLudo((s) => s.view)
   const hydrate = useLudo((s) => s.hydrate)
@@ -29,6 +32,18 @@ export default function LudoApp() {
 
   return (
     <main className="ls-bg h-[100dvh] overflow-hidden text-indigo-50">
+      {/* high-quality velvet table photo — sits UNDER every screen; the
+          dark gradient keeps the board and text readable on top of it.
+          Static (never re-renders), so it costs nothing at runtime. */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 z-0"
+        style={{
+          backgroundImage: `linear-gradient(180deg, rgba(7,9,28,0.60) 0%, rgba(7,9,28,0.68) 55%, rgba(7,9,28,0.78) 100%), url(${BG_TABLE_IMG})`,
+          backgroundSize: 'cover, cover',
+          backgroundPosition: 'center, center',
+        }}
+      />
       <AnimatePresence mode="wait">
         <motion.div
           key={view}
