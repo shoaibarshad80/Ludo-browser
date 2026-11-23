@@ -371,3 +371,133 @@ export function ChestArt({ size = 96, className }: IconProps) {
     </svg>
   )
 }
+
+// ---------- brand emblem + profile nav ----------
+
+/**
+ * Custom Ludo emblem — crisp vector board badge (no image asset).
+ * Glossy rounded-square rim, four colored home quadrants, white cross
+ * paths with cell hints and a red-star center home.
+ */
+export function LudoBadge({ size = 120, className }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 120 120"
+      width={size}
+      height={size}
+      className={className}
+      style={{ filter: 'drop-shadow(0 10px 22px rgba(8,2,24,0.55))' }}
+      aria-hidden
+    >
+      <defs>
+        <linearGradient id="lb-rim" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#5a6178" />
+          <stop offset="0.5" stopColor="#333950" />
+          <stop offset="1" stopColor="#181c2c" />
+        </linearGradient>
+        <radialGradient id="lb-red" cx="0.32" cy="0.28" r="1">
+          <stop offset="0" stopColor="#ff7d6e" />
+          <stop offset="0.55" stopColor="#e5453c" />
+          <stop offset="1" stopColor="#a82820" />
+        </radialGradient>
+        <radialGradient id="lb-green" cx="0.32" cy="0.28" r="1">
+          <stop offset="0" stopColor="#8fd691" />
+          <stop offset="0.55" stopColor="#46a848" />
+          <stop offset="1" stopColor="#2f7c33" />
+        </radialGradient>
+        <radialGradient id="lb-yellow" cx="0.32" cy="0.28" r="1">
+          <stop offset="0" stopColor="#ffe08a" />
+          <stop offset="0.55" stopColor="#f7c331" />
+          <stop offset="1" stopColor="#c48f16" />
+        </radialGradient>
+        <radialGradient id="lb-blue" cx="0.32" cy="0.28" r="1">
+          <stop offset="0" stopColor="#8ec7f5" />
+          <stop offset="0.55" stopColor="#2a8ee0" />
+          <stop offset="1" stopColor="#1d5c9e" />
+        </radialGradient>
+      </defs>
+
+      {/* outer rim + bevel */}
+      <rect x="4" y="4" width="112" height="112" rx="28" fill="url(#lb-rim)" />
+      <rect x="5" y="5" width="110" height="110" rx="27" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.8" />
+
+      {/* cream board plate */}
+      <rect x="12" y="12" width="96" height="96" rx="21" fill="#f4f1ea" />
+      <rect x="12.6" y="12.6" width="94.8" height="94.8" rx="20.4" fill="none" stroke="rgba(0,0,0,0.12)" strokeWidth="1.4" />
+
+      {/* four home quadrants */}
+      <path d="M18 33a15 15 0 0 1 15-15h15v44H18z" fill="url(#lb-red)" />
+      <path d="M57 18h15a15 15 0 0 1 15 15v29H57z" fill="url(#lb-green)" />
+      <path d="M18 57h30v44H33a15 15 0 0 1-15-15z" fill="url(#lb-yellow)" />
+      <path d="M57 57h30v29a15 15 0 0 1-15 15H57z" fill="url(#lb-blue)" />
+
+      {/* home circles in each quadrant */}
+      <g fill="#ffffff" opacity="0.9">
+        <circle cx="28.2" cy="28.2" r="4.6" /><circle cx="39.4" cy="28.2" r="4.6" />
+        <circle cx="28.2" cy="39.4" r="4.6" /><circle cx="39.4" cy="39.4" r="4.6" />
+        <circle cx="80.6" cy="28.2" r="4.6" /><circle cx="91.8" cy="28.2" r="4.6" />
+        <circle cx="80.6" cy="39.4" r="4.6" /><circle cx="91.8" cy="39.4" r="4.6" />
+        <circle cx="28.2" cy="80.6" r="4.6" /><circle cx="39.4" cy="80.6" r="4.6" />
+        <circle cx="28.2" cy="91.8" r="4.6" /><circle cx="39.4" cy="91.8" r="4.6" />
+        <circle cx="80.6" cy="80.6" r="4.6" /><circle cx="91.8" cy="80.6" r="4.6" />
+        <circle cx="80.6" cy="91.8" r="4.6" /><circle cx="91.8" cy="91.8" r="4.6" />
+      </g>
+      <g fill="none" strokeWidth="1.1" opacity="0.75">
+        <g stroke="#c23b33">
+          <circle cx="28.2" cy="28.2" r="4.6" /><circle cx="39.4" cy="28.2" r="4.6" />
+          <circle cx="28.2" cy="39.4" r="4.6" /><circle cx="39.4" cy="39.4" r="4.6" />
+        </g>
+        <g stroke="#3d9440">
+          <circle cx="80.6" cy="28.2" r="4.6" /><circle cx="91.8" cy="28.2" r="4.6" />
+          <circle cx="80.6" cy="39.4" r="4.6" /><circle cx="91.8" cy="39.4" r="4.6" />
+        </g>
+        <g stroke="#c9a016">
+          <circle cx="28.2" cy="80.6" r="4.6" /><circle cx="39.4" cy="80.6" r="4.6" />
+          <circle cx="28.2" cy="91.8" r="4.6" /><circle cx="39.4" cy="91.8" r="4.6" />
+        </g>
+        <g stroke="#2774b8">
+          <circle cx="80.6" cy="80.6" r="4.6" /><circle cx="91.8" cy="80.6" r="4.6" />
+          <circle cx="80.6" cy="91.8" r="4.6" /><circle cx="91.8" cy="91.8" r="4.6" />
+        </g>
+      </g>
+
+      {/* white cross paths */}
+      <path d="M18 57h30v6H18zM72 57h30v6H72zM57 18h6v30h-6zM57 72h6v30h-6z" fill="#f4f1ea" />
+      {/* path cell hints */}
+      <g fill="rgba(31,41,66,0.14)">
+        <rect x="29" y="57.8" width="5.4" height="5.4" rx="1.5" />
+        <rect x="41.5" y="57.8" width="5.4" height="5.4" rx="1.5" />
+        <rect x="84.5" y="57.8" width="5.4" height="5.4" rx="1.5" />
+        <rect x="97" y="57.8" width="5" height="5.4" rx="1.5" />
+        <rect x="56.8" y="29" width="5.4" height="5.4" rx="1.5" />
+        <rect x="56.8" y="41.5" width="5.4" height="5.4" rx="1.5" />
+        <rect x="56.8" y="84.5" width="5.4" height="5.4" rx="1.5" />
+        <rect x="56.8" y="97" width="5.4" height="5" rx="1.5" />
+      </g>
+
+      {/* center home with red star */}
+      <circle cx="60" cy="60" r="14.5" fill="#ffffff" stroke="rgba(0,0,0,0.14)" strokeWidth="1.2" />
+      <circle cx="60" cy="60" r="10.4" fill="none" stroke="#e6e1d2" strokeWidth="1.5" />
+      <path
+        d="M60 50.4l3 6.1 6.7.9-4.9 4.7 1.2 6.6-6-3.2-6 3.2 1.2-6.6-4.9-4.7 6.7-.9z"
+        fill="#e5453c"
+        stroke="#a82820"
+        strokeWidth="1"
+        strokeLinejoin="round"
+      />
+
+      {/* top gloss */}
+      <ellipse cx="43" cy="21" rx="35" ry="11" fill="rgba(255,255,255,0.2)" />
+    </svg>
+  )
+}
+
+/** Profile — single player on teal plate (bottom nav). */
+export function NavProfile({ size = 22, className }: IconProps) {
+  return (
+    <Plate id="pi-prof" from="#7dd8c8" via="#2fb9a4" to="#1a8b7c" size={size} className={className}>
+      <circle cx="24" cy="18.4" r="6.4" fill="#fff" />
+      <path d="M12.4 34.8v-1.6c0-5.7 4.8-9.2 11.6-9.2s11.6 3.5 11.6 9.2v1.6z" fill="#fff" />
+    </Plate>
+  )
+}

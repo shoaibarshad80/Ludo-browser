@@ -128,7 +128,17 @@ export function AvatarRing({
       animate={active ? { scale: [1, 1.07, 1] } : undefined}
       transition={active ? { repeat: Infinity, duration: 1.4 } : undefined}
     >
-      <span className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)]">{avatar}</span>
+      {avatar.startsWith('data:') ? (
+        <img
+          src={avatar}
+          alt=""
+          draggable={false}
+          className="h-[74%] w-[74%] rounded-full object-cover"
+          style={{ boxShadow: 'inset 0 0 0 1.5px rgba(255,255,255,0.35)' }}
+        />
+      ) : (
+        <span className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)]">{avatar}</span>
+      )}
     </motion.span>
   )
 }

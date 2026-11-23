@@ -15,8 +15,9 @@ import {
 import { botChooseMove } from '@/lib/ludo/ai'
 import { START_IDX, trackIdxFor, tokenScreenPos } from '@/lib/ludo/board'
 import { AVATARS, FREE_REFILL, STARTING_COINS, TURN_SECONDS } from '@/lib/ludo/constants'
-import { sfx, setMuted as setSfxMuted } from '@/lib/ludo/sounds'
+import { sfx, setMuted as setSfxMuted, setSfxEnabled } from '@/lib/ludo/sounds'
 import { getSocket, online } from '@/lib/online/client'
+import { isLang, type Lang } from '@/lib/ludo/i18n'
 
 export interface Profile {
   id: string
@@ -26,6 +27,8 @@ export interface Profile {
   gems: number
   wins: number
   losses: number
+  /** lobby language preference (i18n) */
+  lang: Lang
   /** recent finished games, oldest first (for the profile timeline graph) */
   history: GameHistoryEntry[]
 }
@@ -111,12 +114,14 @@ interface LudoStore {
   profile: Profile
   hydrated: boolean
   soundOn: boolean
+  sfxOn: boolean
   hydrate: () => void
   updateProfile: (patch: Partial<Profile>) => void
   addCoins: (n: number) => void
   addGems: (n: number) => void
   refillCoins: () => void
   toggleSound: () => void
+  setSfxOn: (b: boolean) => void
   daily: DailyState | null
   claimDaily: () => void
 
@@ -204,6 +209,7 @@ const DEFAULT_PROFILE: Profile = {
   gems: 20,
   wins: 0,
   losses: 0,
+  lang: 'en',
   history: [],
 }
 
@@ -217,6 +223,7 @@ function loadProfile(): Profile {
         ...DEFAULT_PROFILE,
         ...p,
         gems: typeof p.gems === 'number' ? p.gems : 20,
+        lang: isLang(p.lang) ? p.lang : 'en',
         history: Array.isArray(p.history) ? p.history : [],
       }
     }
@@ -228,7 +235,38 @@ function loadProfile(): Profile {
     id: uid(),
     name: 'Player' + Math.floor(100 + Math.random() * 900),
     avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)],
+    lang: 'en',
     history: [],
+  }
+}
+
+/** Persisted sound preferences (master + sfx). */
+interface SoundPrefs {
+  soundOn: boolean
+  sfxOn: boolean
+}
+
+function loadSoundPrefs(): SoundPrefs {
+  if (typeof window === 'undefined') return { soundOn: true, sfxOn: true }
+  try {
+    const raw = localStorage.getItem('ludo.sound.v1')
+    if (raw) {
+      const s = JSON.parse(raw) as Partial<SoundPrefs>
+      return { soundOn: s.soundOn !== false, sfxOn: s.sfxOn !== false }
+    }
+  } catch {
+    /* ignore */
+  }
+  return { soundOn: true, sfxOn: true }
+}
+
+function saveSoundPrefs(p: SoundPrefs) {
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('ludo.sound.v1', JSON.stringify(p))
+    } catch {
+      /* ignore */
+    }
   }
 }
 
@@ -738,10 +776,14 @@ export const useLudo = create<LudoStore>((set, get) => {
     profile: { ...DEFAULT_PROFILE },
     hydrated: false,
     soundOn: true,
+    sfxOn: true,
     daily: null,
     hydrate: () => {
       const p = loadProfile()
-      set({ profile: p, daily: loadDaily(), hydrated: true })
+      const prefs = loadSoundPrefs()
+      setSfxMuted(!prefs.soundOn)
+      setSfxEnabled(prefs.sfxOn)
+      set({ profile: p, daily: loadDaily(), soundOn: prefs.soundOn, sfxOn: prefs.sfxOn, hydrated: true })
     },
     updateProfile: (patch) => {
       set((s) => {
@@ -781,8 +823,16 @@ export const useLudo = create<LudoStore>((set, get) => {
     },
     toggleSound: () => {
       const next = !get().soundOn
+      const prefs = { soundOn: next, sfxOn: get().sfxOn }
       setSfxMuted(!next)
+      saveSoundPrefs(prefs)
       set({ soundOn: next })
+    },
+    setSfxOn: (b) => {
+      const prefs = { soundOn: get().soundOn, sfxOn: b }
+      setSfxEnabled(b)
+      saveSoundPrefs(prefs)
+      set({ sfxOn: b })
     },
 
     view: 'menu',

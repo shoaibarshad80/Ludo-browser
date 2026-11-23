@@ -7,7 +7,19 @@
 import { GameHistoryEntry } from '@/stores/ludoStore'
 
 /** Timestamped timeline graph of recent games (coin balance + W/L dots). */
-export default function HistoryGraph({ history, coins }: { history: GameHistoryEntry[]; coins: number }) {
+export default function HistoryGraph({
+  history,
+  coins,
+  title = 'RECENT GAMES TIMELINE',
+  empty = 'Finish a game — your win/loss timeline graph appears here.',
+  onPlay,
+}: {
+  history: GameHistoryEntry[]
+  coins: number
+  title?: string
+  empty?: string
+  onPlay?: () => void
+}) {
   const pts = history.slice(-14)
   const W = 300
   const H = 116
@@ -43,16 +55,40 @@ export default function HistoryGraph({ history, coins }: { history: GameHistoryE
   return (
     <div className="ls-panel rounded-2xl p-3.5">
       <div className="mb-1.5 flex items-center justify-between">
-        <p className="ls-font text-xs text-amber-200">RECENT GAMES TIMELINE</p>
+        <p className="ls-font text-xs text-amber-200">{title}</p>
         <span className="text-[9px] text-fuchsia-100/50">{history.length} recorded</span>
       </div>
       {pts.length === 0 ? (
-        <p className="py-5 text-center text-[11px] text-fuchsia-100/50">
-          Finish a game — your win/loss timeline graph appears here.
-        </p>
+        <div className="flex flex-col items-center gap-2 py-4">
+          <span className="text-2xl" aria-hidden>🎲</span>
+          <p className="max-w-[220px] text-center text-[11px] leading-relaxed text-fuchsia-100/50">{empty}</p>
+          {onPlay && (
+            <button
+              onClick={onPlay}
+              className="ls-btn ls-btn-gold ls-font mt-0.5 rounded-xl px-4 py-1.5 text-[11px] text-white"
+            >
+              PLAY NOW
+            </button>
+          )}
+        </div>
       ) : (
         <>
           <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Coin balance over recent games">
+            <defs>
+              <linearGradient id="hg-area" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="rgba(196,181,253,0.32)" />
+                <stop offset="1" stopColor="rgba(196,181,253,0)" />
+              </linearGradient>
+            </defs>
+            {/* soft area fill under the balance curve */}
+            <polygon
+              points={[
+                ...balances.map((v, i) => `${x(i)},${y(v)}`),
+                `${x(pts.length - 1)},${H - PAD_BOTTOM}`,
+                `${x(0)},${H - PAD_BOTTOM}`,
+              ].join(' ')}
+              fill="url(#hg-area)"
+            />
             {/* grid lines */}
             {[0.25, 0.5, 0.75].map((f) => {
               const gy = PAD_TOP + f * (H - PAD_TOP - PAD_BOTTOM)
@@ -73,7 +109,7 @@ export default function HistoryGraph({ history, coins }: { history: GameHistoryE
               points={balances.map((v, i) => `${x(i)},${y(v)}`).join(' ')}
               fill="none"
               stroke="#c4b5fd"
-              strokeWidth="2.2"
+              strokeWidth="2.4"
               strokeLinejoin="round"
               strokeLinecap="round"
             />

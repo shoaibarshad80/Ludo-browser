@@ -4,6 +4,8 @@
 
 let ctx: AudioContext | null = null
 let muted = false
+/** "Sound effects" setting — game sfx + ui clicks; master mute sits on top. */
+let sfxEnabled = true
 
 export function setMuted(m: boolean) {
   muted = m
@@ -11,6 +13,10 @@ export function setMuted(m: boolean) {
 
 export function isMuted() {
   return muted
+}
+
+export function setSfxEnabled(b: boolean) {
+  sfxEnabled = b
 }
 
 function getCtx(): AudioContext | null {
@@ -28,7 +34,7 @@ function getCtx(): AudioContext | null {
 
 function tone(freq: number, dur: number, type: OscillatorType = 'sine', vol = 0.12, delay = 0, slideTo?: number) {
   const c = getCtx()
-  if (!c || muted) return
+  if (!c || muted || !sfxEnabled) return
   const t0 = c.currentTime + delay
   const osc = c.createOscillator()
   const gain = c.createGain()
@@ -45,7 +51,7 @@ function tone(freq: number, dur: number, type: OscillatorType = 'sine', vol = 0.
 
 function noise(dur: number, vol = 0.08, delay = 0) {
   const c = getCtx()
-  if (!c || muted) return
+  if (!c || muted || !sfxEnabled) return
   const t0 = c.currentTime + delay
   const buffer = c.createBuffer(1, Math.ceil(c.sampleRate * dur), c.sampleRate)
   const data = buffer.getChannelData(0)
@@ -104,5 +110,9 @@ export const sfx = {
   coin() {
     tone(1319, 0.06, 'square', 0.06)
     tone(1760, 0.09, 'square', 0.06, 0.05)
+  },
+  /** soft UI tap for nav / buttons (kept very quiet) */
+  click() {
+    tone(1400, 0.03, 'triangle', 0.045)
   },
 }

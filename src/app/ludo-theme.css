@@ -145,12 +145,30 @@ body {
 
 /* ---------- bottom navigation — slim dark bar, gold raised HOME ---------- */
 
-.ls-nav-bar {
-  background: linear-gradient(180deg, #33105a 0%, #1d0940 55%, #13042e 100%);
-  border-top: 1.5px solid rgba(255, 214, 122, 0.32);
-  box-shadow: 0 -10px 26px rgba(14, 2, 30, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.07);
-  padding-top: 4px;
-  padding-bottom: max(env(safe-area-inset-bottom), 5px);
+/* floating dock bottom nav */
+.ls-nav-dock {
+  position: relative;
+  background: linear-gradient(180deg, #3a1260 0%, #200947 55%, #170531 100%);
+  border: 1.5px solid rgba(255, 214, 122, 0.36);
+  border-radius: 26px;
+  box-shadow:
+    0 14px 30px rgba(8, 1, 20, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -8px 20px rgba(0, 0, 0, 0.35);
+  padding-top: 5px;
+  padding-bottom: 6px;
+  overflow: visible;
+}
+.ls-nav-dock::before {
+  content: '';
+  position: absolute;
+  top: -1.5px;
+  left: 16%;
+  right: 16%;
+  height: 1.5px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(255, 224, 138, 0.6) 30%, rgba(255, 224, 138, 0.6) 70%, transparent);
+  pointer-events: none;
 }
 
 .ls-nav-item {
@@ -579,6 +597,35 @@ body {
     opacity: 0.2;
   }
 }
+
+/* settings switch */
+.ls-switch {
+  position: relative;
+  display: inline-block;
+  width: 34px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: background 0.15s ease;
+}
+.ls-switch-on {
+  background: linear-gradient(180deg, #34d399, #0f9d68);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25), 0 0 8px rgba(52, 211, 153, 0.35);
+}
+.ls-switch-dot {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: transform 0.15s ease;
+}
+.ls-switch-on .ls-switch-dot { transform: translateX(14px); }
 
 /* ---------- misc ---------- */
 

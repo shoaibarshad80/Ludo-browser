@@ -16,31 +16,32 @@
 // practice, daily reward, friends, leaderboard, sound, rooms).
 // ============================================================
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  Bot, Check, ChevronRight, Copy, Flag, Gift, Globe,
-  KeyRound, Loader2, Play, Send, Settings, Trophy,
-  Users, Volume2, VolumeX, Zap,
+  Bot, Camera, Check, ChevronRight, Copy, Flag, Gift, Globe,
+  KeyRound, Loader2, Play, Send, Settings, Trash2, Trophy,
+  Users, Zap,
 } from 'lucide-react'
 import {
-  NavShop, NavFriends, HomeGlyph, NavCollections,
-  IconStarGold,
+  NavShop, NavFriends, HomeGlyph, NavProfile,
+  IconStarGold, LudoBadge,
   DecoDie, DecoToken, ChestArt,
 } from '@/components/ludo/icons'
 import { Art2P, Art4P, ArtPrivate, ArtOffline } from '@/components/ludo/MenuArt'
 import {
-  Coin3D, Gem3D, Chest3D, Pawn2x3D, Pawn4x3D, Robot3D, Crown3D, Logo3D,
+  Coin3D, Gem3D, Chest3D, Pawn2x3D, Pawn4x3D, Robot3D, Crown3D,
 } from '@/components/ludo/art3d'
 import HistoryGraph from '@/components/ludo/HistoryGraph'
-import { useLudo } from '@/stores/ludoStore'
+import { useLudo, DAILY_REWARDS } from '@/stores/ludoStore'
 import { AVATARS, FREE_REFILL, STAKES } from '@/lib/ludo/constants'
 import { ACHIEVEMENTS, BOT_FRIENDS, LEADERBOARD_SEED, levelFromWins, rankTitle } from '@/lib/ludo/social'
-import { DAILY_REWARDS } from '@/stores/ludoStore'
+import { LANGS, t, type Lang } from '@/lib/ludo/i18n'
+import { sfx } from '@/lib/ludo/sounds'
 import { AvatarRing, CoinIcon, GemIcon, LudoLogo, ModeIllustration } from '@/components/ludo/ui'
 import type { GameMode } from '@/lib/ludo/types'
 
-type LobbyTab = 'home' | 'friends' | 'collections' | 'chest' | 'shop'
+type LobbyTab = 'home' | 'friends' | 'profile' | 'chest' | 'shop'
 type SheetKind = null | 'table2' | 'table4' | 'private' | 'offline' | 'ranks'
 
 // ---------- shared atoms ----------
@@ -112,6 +113,9 @@ export default function MenuScreen() {
   const onlineJoin = useLudo((s) => s.onlineJoin)
   const soundOn = useLudo((s) => s.soundOn)
   const toggleSound = useLudo((s) => s.toggleSound)
+  const sfxOn = useLudo((s) => s.sfxOn)
+  const setSfxOn = useLudo((s) => s.setSfxOn)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   const [tab, setTab] = useState<LobbyTab>('home')
   const [sheet, setSheet] = useState<SheetKind>(null)
@@ -129,6 +133,8 @@ export default function MenuScreen() {
   }, [onlineConnect])
 
   const lvl = levelFromWins(profile.wins)
+  const lang = profile.lang
+  const tr = (k: string) => t(lang, k)
   const dailyClaimable = daily?.lastClaim !== new Date().toLocaleDateString('en-CA')
   const onlineFriends = BOT_FRIENDS.filter((f) => f.status !== 'offline').length
   const unlockedAchievements = ACHIEVEMENTS.filter(
@@ -137,6 +143,13 @@ export default function MenuScreen() {
 
   const totalGames = profile.wins + profile.losses
   const winRate = totalGames > 0 ? Math.round((profile.wins / totalGames) * 100) : 0
+
+  /** longest run of consecutive wins in recorded history */
+  let run = 0
+  const bestStreak = profile.history.reduce((best, h) => {
+    run = h.won ? run + 1 : 0
+    return Math.max(best, run)
+  }, 0)
 
   function startVsComputer(gameMode: GameMode, playerCount: 2 | 4, useStake: number) {
     const botAvatars = AVATARS.filter((a) => a !== profile.avatar)
@@ -185,6 +198,36 @@ export default function MenuScreen() {
     }).catch(() => undefined)
   }
 
+  /** pick a photo, center-crop it to a small square and use it as avatar */
+  function pickPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0]
+    e.target.value = ''
+    if (!f || !f.type.startsWith('image/')) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const img = new window.Image()
+      img.onload = () => {
+        const S = 96
+        const canvas = document.createElement('canvas')
+        canvas.width = S
+        canvas.height = S
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return
+        const side = Math.min(img.width, img.height)
+        ctx.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, S, S)
+        try {
+          updateProfile({ avatar: canvas.toDataURL('image/jpeg', 0.82) })
+        } catch {
+          /* storage full — ignore */
+        }
+      }
+      img.src = String(reader.result)
+    }
+    reader.readAsDataURL(f)
+  }
+
+  const hasPhoto = profile.avatar.startsWith('data:')
+
   const canPlay = profile.coins >= stake
   const seats: 2 | 4 = sheet === 'table2' ? 2 : 4
 
@@ -212,19 +255,19 @@ export default function MenuScreen() {
             value={`${Math.min(profile.wins, 50)}/50`}
             icon={<IconStarGold size={16} />}
             onClick={() => setSheet('ranks')}
-            label={`Win stars ${profile.wins}/50 — tap for leaderboard`}
+            label={`${tr('winStars')} ${profile.wins}/50 — ${tr('tapForLeaderboard')}`}
           />
           <CurrencyChip
             value={profile.coins.toLocaleString()}
             icon={<Coin3D size={24} />}
             onClick={refillCoins}
-            label={`Coins ${profile.coins} — tap for free refill`}
+            label={`${tr('coins')} ${profile.coins.toLocaleString()} — ${tr('tapForRefill')}`}
           />
           <CurrencyChip
             value={profile.gems.toLocaleString()}
             icon={<Gem3D size={22} />}
             onClick={() => setTab('shop')}
-            label={`Gems ${profile.gems} — tap for the shop`}
+            label={`${tr('gems')} ${profile.gems} — ${tr('tapForShop')}`}
             valueClass="text-teal-100"
           />
           <div className="ml-auto flex items-center gap-1.5">
@@ -232,9 +275,9 @@ export default function MenuScreen() {
             <div className="relative">
               <motion.button
                 whileTap={{ scale: 0.9 }}
-                onClick={() => { setSettingsOpen((o) => !o) }}
+                onClick={() => { setSettingsOpen((o) => !o); sfx.click() }}
                 className="ls-lobby-chip grid h-9 w-9 place-items-center rounded-full text-fuchsia-100"
-                aria-label="Settings"
+                aria-label={tr('settings')}
               >
                 <Settings size={20} />
               </motion.button>
@@ -244,20 +287,46 @@ export default function MenuScreen() {
                     initial={{ opacity: 0, y: -8, scale: 0.96 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                    className="ls-sheet absolute right-0 top-10 z-50 w-52 rounded-2xl p-2"
+                    className="ls-sheet absolute right-0 top-10 z-50 w-56 rounded-2xl p-2"
                   >
+                    <p className="ls-font px-2 pb-1 pt-0.5 text-[10px] tracking-wide text-amber-200">{tr('language')}</p>
+                    <div className="grid grid-cols-3 gap-1 px-1">
+                      {LANGS.map((l) => (
+                        <button
+                          key={l.id}
+                          onClick={() => { updateProfile({ lang: l.id as Lang }); sfx.click() }}
+                          className="ls-option ls-font rounded-lg py-1.5 text-[11px] text-white"
+                          data-active={lang === l.id}
+                        >
+                          {l.native}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="mx-2 my-1.5 border-t border-white/10" />
                     <button
-                      onClick={toggleSound}
+                      onClick={() => { toggleSound(); sfx.click() }}
                       className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm text-fuchsia-50 transition hover:bg-white/10"
                     >
-                      Sound effects
-                      {soundOn ? <Volume2 size={15} className="text-emerald-300" /> : <VolumeX size={15} className="text-slate-400" />}
+                      {tr('sound')}
+                      <span className={`ls-switch ${soundOn ? 'ls-switch-on' : ''}`}>
+                        <span className="ls-switch-dot" />
+                      </span>
                     </button>
                     <button
-                      onClick={() => { setTab('collections'); setSettingsOpen(false) }}
+                      onClick={() => { setSfxOn(!sfxOn); sfx.click() }}
                       className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm text-fuchsia-50 transition hover:bg-white/10"
                     >
-                      Edit profile <ChevronRight size={14} className="text-fuchsia-200" />
+                      {tr('soundEffects')}
+                      <span className={`ls-switch ${sfxOn ? 'ls-switch-on' : ''}`}>
+                        <span className="ls-switch-dot" />
+                      </span>
+                    </button>
+                    <div className="mx-2 my-1.5 border-t border-white/10" />
+                    <button
+                      onClick={() => { setTab('profile'); setSettingsOpen(false); sfx.click() }}
+                      className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm text-fuchsia-50 transition hover:bg-white/10"
+                    >
+                      {tr('editProfile')} <ChevronRight size={14} className="text-fuchsia-200" />
                     </button>
                   </motion.div>
                 )}
@@ -268,7 +337,7 @@ export default function MenuScreen() {
 
         {/* ============ PLAYER ROW (avatar + level) ============ */}
         <div className="flex items-center gap-2.5 px-2.5 pt-2">
-          <button onClick={() => setTab('collections')} className="relative shrink-0" aria-label="Open profile">
+          <button onClick={() => { setTab('profile'); sfx.click() }} className="relative shrink-0" aria-label={tr('profile')}>
             <AvatarRing avatar={profile.avatar} size={46} />
             <span
               className="ls-font absolute -bottom-1 -right-1.5 grid h-[22px] min-w-[22px] place-items-center rounded-full px-1 text-[10px] text-white"
@@ -283,7 +352,7 @@ export default function MenuScreen() {
               className="ls-font mt-1 inline-flex items-center gap-1 rounded-md px-1.5 py-[2px] text-[9px] leading-none text-white"
               style={{ background: 'linear-gradient(180deg,#ff9d3c,#e8720c)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4)' }}
             >
-              <Flag size={9} fill="#fff" /> Level {lvl.level}
+              <Flag size={9} fill="#fff" /> {tr('level')} {lvl.level}
             </span>
             <div
               className="mt-1.5 h-[5px] w-[112px] overflow-hidden rounded-full"
@@ -303,9 +372,9 @@ export default function MenuScreen() {
 
           <span
             className="ls-lobby-chip ls-font ml-auto inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] leading-none text-amber-100"
-            title="Your total wins"
+            title={tr('totalWins')}
           >
-            <Trophy size={11} className="text-amber-300" /> {profile.wins} WINS
+            <Trophy size={11} className="text-amber-300" /> {profile.wins} {tr('winsShort').toUpperCase()}
           </span>
         </div>
 
@@ -315,8 +384,8 @@ export default function MenuScreen() {
           <div className="pointer-events-none relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center pb-1.5">
             <div className="ls-hero-float relative">
               <span aria-hidden className="ls-hero-halo absolute -inset-4 rounded-[34%]" />
-              <div className="aspect-square h-[min(23vh,100px)]">
-                <Logo3D size={100} className="h-full w-full" />
+              <div className="aspect-square h-[min(20vh,92px)]">
+                <LudoBadge size={92} className="h-full w-full" />
               </div>
             </div>
             <h1 className="ls-font ls-hero-word">LUDO</h1>
@@ -324,18 +393,18 @@ export default function MenuScreen() {
           </div>
 
           {/* two CSS-only floaters (composited transform, no JS loop) */}
-          <div className="ls-float-a pointer-events-none absolute left-5 top-[30%] z-0" aria-hidden>
+          <div className="ls-float-a pointer-events-none absolute left-5 top-[20%] z-0" aria-hidden>
             <DecoDie value={5} size={30} tilt={14} />
           </div>
-          <div className="ls-float-b pointer-events-none absolute right-6 top-[54%] z-0" aria-hidden>
+          <div className="ls-float-b pointer-events-none absolute right-6 top-[62%] z-0" aria-hidden>
             <DecoToken color="blue" size={20} />
           </div>
 
           {/* first row — 2 PLAYER + PRIVATE TABLE */}
           <div className="relative z-10 grid grid-cols-2 gap-2.5">
             <button
-              onClick={() => { setSheet('table2'); setSheetMode('classic') }}
-              className="ls-tile-gold ls-shine ls-rise relative flex h-[min(42vw,25vh,176px)] flex-col overflow-hidden rounded-2xl p-1.5"
+              onClick={() => { setSheet('table2'); setSheetMode('classic'); sfx.click() }}
+              className="ls-tile-gold ls-shine ls-rise relative flex h-[min(44vw,26vh,184px)] flex-col overflow-hidden rounded-2xl p-1.5"
               style={{ '--d': '60ms' } as React.CSSProperties}
               aria-label="Play 2 player"
             >
@@ -343,12 +412,12 @@ export default function MenuScreen() {
                 <div className="grid h-full place-items-center pb-0.5"><Pawn2x3D size={84} /></div>
                 <PlayChip />
               </div>
-              <span className="ls-font pb-1 text-center text-[15px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(150,80,0,0.7)' }}>2 PLAYER</span>
+              <span className="ls-font pb-1 text-center text-[15px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(150,80,0,0.7)' }}>{tr('twoPlayer')}</span>
             </button>
 
             <button
-              onClick={() => setSheet('private')}
-              className="ls-tile-purple ls-shine ls-rise relative flex h-[min(42vw,25vh,176px)] flex-col overflow-hidden rounded-2xl p-1.5"
+              onClick={() => { setSheet('private'); sfx.click() }}
+              className="ls-tile-purple ls-shine ls-rise relative flex h-[min(44vw,26vh,184px)] flex-col overflow-hidden rounded-2xl p-1.5"
               style={{ '--d': '140ms' } as React.CSSProperties}
               aria-label="Open private table"
             >
@@ -356,15 +425,15 @@ export default function MenuScreen() {
                 <div className="grid h-full place-items-center pb-0.5"><Crown3D size={74} /></div>
                 <PlayChip />
               </div>
-              <span className="ls-font pb-1 text-center text-[13px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(40,10,90,0.7)' }}>PRIVATE TABLE</span>
+              <span className="ls-font pb-1 text-center text-[13px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(40,10,90,0.7)' }}>{tr('privateTable')}</span>
             </button>
           </div>
 
           {/* second row — 4 PLAYER + OFFLINE */}
           <div className="relative z-10 mt-2.5 grid grid-cols-2 gap-2.5 pb-1.5">
             <button
-              onClick={() => { setSheet('table4'); setSheetMode('classic') }}
-              className="ls-tile-purple ls-shine ls-rise relative flex h-[min(32vw,18vh,132px)] flex-col overflow-hidden rounded-2xl p-1.5"
+              onClick={() => { setSheet('table4'); setSheetMode('classic'); sfx.click() }}
+              className="ls-tile-purple ls-shine ls-rise relative flex h-[min(34vw,19vh,140px)] flex-col overflow-hidden rounded-2xl p-1.5"
               style={{ '--d': '220ms' } as React.CSSProperties}
               aria-label="Play 4 player"
             >
@@ -372,12 +441,12 @@ export default function MenuScreen() {
                 <div className="grid h-full place-items-center pb-0.5"><Pawn4x3D size={74} /></div>
                 <PlayChip />
               </div>
-              <span className="ls-font pb-1 text-center text-[13px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(40,10,90,0.7)' }}>4 PLAYER</span>
+              <span className="ls-font pb-1 text-center text-[13px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(40,10,90,0.7)' }}>{tr('fourPlayer')}</span>
             </button>
 
             <button
-              onClick={() => { setSheet('offline'); setSheetMode('classic') }}
-              className="ls-tile-green ls-shine ls-rise relative flex h-[min(32vw,18vh,132px)] flex-col overflow-hidden rounded-2xl p-1.5"
+              onClick={() => { setSheet('offline'); setSheetMode('classic'); sfx.click() }}
+              className="ls-tile-green ls-shine ls-rise relative flex h-[min(34vw,19vh,140px)] flex-col overflow-hidden rounded-2xl p-1.5"
               style={{ '--d': '300ms' } as React.CSSProperties}
               aria-label="Play offline — bots or pass and play"
             >
@@ -385,25 +454,25 @@ export default function MenuScreen() {
                 <div className="grid h-full place-items-center pb-0.5"><Robot3D size={66} /></div>
                 <PlayChip />
               </div>
-              <span className="ls-font pb-1 text-center text-[13px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(10,60,30,0.7)' }}>OFFLINE</span>
+              <span className="ls-font pb-1 text-center text-[13px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(10,60,30,0.7)' }}>{tr('offline')}</span>
             </button>
           </div>
         </main>
 
-        {/* ============ BOTTOM NAV — slim bar, gold raised HOME ============ */}
-        <nav className="ls-nav-bar relative z-40">
-          <div className="mx-auto grid w-full max-w-[430px] grid-cols-5 items-end px-2">
+        {/* ============ BOTTOM NAV — floating dock, gold raised HOME ============ */}
+        <nav className="relative z-40 px-2" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 7px)' }}>
+          <div className="ls-nav-dock mx-auto grid w-full max-w-[430px] grid-cols-5 items-end">
             {([
-              { id: 'shop', icon: <NavShop size={27} />, label: 'Shop' },
-              { id: 'friends', icon: <NavFriends size={27} />, label: 'Friends' },
-              { id: 'home', icon: <HomeGlyph size={30} />, label: 'Home', raised: true },
-              { id: 'collections', icon: <NavCollections size={27} />, label: 'Trophies', badge: unlockedAchievements },
-              { id: 'chest', icon: <Chest3D size={27} />, label: 'Chest', badge: dailyClaimable ? 1 : undefined },
+              { id: 'shop', icon: <NavShop size={27} />, label: tr('shop') },
+              { id: 'friends', icon: <NavFriends size={27} />, label: tr('friends') },
+              { id: 'home', icon: <HomeGlyph size={30} />, label: tr('home'), raised: true },
+              { id: 'profile', icon: <NavProfile size={27} />, label: tr('profile'), badge: unlockedAchievements },
+              { id: 'chest', icon: <Chest3D size={27} />, label: tr('chest'), badge: dailyClaimable ? 1 : undefined },
             ] as Array<{ id: LobbyTab; icon: React.ReactNode; label: string; raised?: boolean; badge?: number }>).map((item) => {
               const active = tab === item.id
               if (item.raised) {
                 return (
-                  <button key={item.id} onClick={() => setTab(item.id)} className="ls-nav-home-btn flex flex-col items-center" aria-current={active ? 'page' : undefined}>
+                  <button key={item.id} onClick={() => { setTab(item.id); sfx.click() }} className="ls-nav-home-btn flex flex-col items-center" aria-current={active ? 'page' : undefined}>
                     <span className={`ls-nav-home ${active ? 'ls-nav-home-glow' : ''}`}>
                       {item.icon}
                     </span>
@@ -412,7 +481,7 @@ export default function MenuScreen() {
                 )
               }
               return (
-                <button key={item.id} onClick={() => setTab(item.id)} className="ls-nav-item flex flex-col items-center gap-1 pt-1.5" aria-current={active ? 'page' : undefined}>
+                <button key={item.id} onClick={() => { setTab(item.id); sfx.click() }} className="ls-nav-item flex flex-col items-center gap-1 pt-1.5" aria-current={active ? 'page' : undefined}>
                   <span className={`ls-nav-ico ${active ? 'ls-nav-ico-active' : ''}`}>
                     {item.icon}
                     {item.badge ? (
@@ -436,14 +505,14 @@ export default function MenuScreen() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 16 }}
             transition={{ duration: 0.18 }}
-            className="absolute inset-0 z-30 mx-auto flex w-full max-w-[430px] flex-col px-3 pb-[92px] pt-[106px]"
+            className="absolute inset-0 z-30 mx-auto flex w-full max-w-[430px] flex-col px-3 pb-[102px] pt-[104px]"
           >
             <div className="mb-2 flex items-center justify-between">
               <h2 className="ls-font text-lg text-white">
-                {tab === 'shop' && 'SHOP'}
-                {tab === 'friends' && 'FRIENDS'}
-                {tab === 'collections' && 'COLLECTIONS'}
-                {tab === 'chest' && 'CHEST'}
+                {tab === 'shop' && tr('shop').toUpperCase()}
+                {tab === 'friends' && tr('friends').toUpperCase()}
+                {tab === 'profile' && tr('myProfile')}
+                {tab === 'chest' && tr('chest').toUpperCase()}
               </h2>
               <button onClick={() => setTab('home')} className="ls-lobby-chip grid h-8 w-8 place-items-center rounded-full text-white" aria-label="Close">
                 <ChevronRight size={16} className="rotate-90" />
@@ -461,8 +530,8 @@ export default function MenuScreen() {
                   >
                     <CoinIcon size={38} animated />
                     <div className="flex-1">
-                      <p className="ls-font text-sm text-white">Free coin refill</p>
-                      <p className="text-[10px] text-amber-100/80">Tap anytime — instant +{FREE_REFILL.toLocaleString()} coins</p>
+                      <p className="ls-font text-sm text-white">{tr('freeRefill')}</p>
+                      <p className="text-[10px] text-amber-100/80">{tr('tapAnytime')} +{FREE_REFILL.toLocaleString()} {tr('coins')}</p>
                     </div>
                     <span className="ls-font rounded-xl bg-black/25 px-3 py-1.5 text-xs text-white">+{FREE_REFILL.toLocaleString()}</span>
                   </motion.button>
@@ -470,18 +539,18 @@ export default function MenuScreen() {
                   <div className="ls-tile-purple flex items-center gap-3 rounded-2xl p-3">
                     <GemIcon size={34} animated />
                     <div className="flex-1">
-                      <p className="ls-font text-sm text-white">Gems</p>
-                      <p className="text-[10px] text-fuchsia-100/75">Earn 2 gems for every online win</p>
+                      <p className="ls-font text-sm text-white">{tr('gems')}</p>
+                      <p className="text-[10px] text-fuchsia-100/75">{tr('earnGems')}</p>
                     </div>
                     <span className="ls-font text-sm text-teal-100">{profile.gems.toLocaleString()}</span>
                   </div>
 
                   <div className="ls-panel rounded-2xl p-3">
-                    <p className="ls-font text-xs text-amber-200">MORE WAYS TO EARN</p>
+                    <p className="ls-font text-xs text-amber-200">{tr('moreWays')}</p>
                     <ul className="mt-1.5 space-y-1 text-[11px] leading-relaxed text-fuchsia-50/80">
-                      <li className="flex items-center gap-2"><Gift size={12} className="text-amber-200" /> Daily chest — open the Chest tab every day</li>
-                      <li className="flex items-center gap-2"><Trophy size={12} className="text-amber-200" /> Win online tables — pot goes to the champion</li>
-                      <li className="flex items-center gap-2"><IconStarGold size={13} /> Streak Stars — bigger rewards every day in a row</li>
+                      <li className="flex items-center gap-2"><Gift size={12} className="text-amber-200" /> {tr('dailyChestLine')}</li>
+                      <li className="flex items-center gap-2"><Trophy size={12} className="text-amber-200" /> {tr('winOnlineLine')}</li>
+                      <li className="flex items-center gap-2"><IconStarGold size={13} /> {tr('streakStarsLine')}</li>
                     </ul>
                   </div>
                 </div>
@@ -490,7 +559,7 @@ export default function MenuScreen() {
               {/* ---- FRIENDS ---- */}
               {tab === 'friends' && (
                 <div>
-                  <p className="mb-2 text-[11px] text-fuchsia-100/70">{onlineFriends} friends online now</p>
+                  <p className="mb-2 text-[11px] text-fuchsia-100/70">{onlineFriends} {tr('friendsOnlineNow')}</p>
                   <div className="space-y-2">
                     {BOT_FRIENDS.map((f) => {
                       const statusColor = f.status === 'online' ? '#4ade80' : f.status === 'in-game' ? '#f6c453' : '#64748b'
@@ -503,7 +572,7 @@ export default function MenuScreen() {
                           <div className="min-w-0 flex-1">
                             <p className="ls-font truncate text-xs text-white">{f.name}</p>
                             <p className="text-[9px] text-fuchsia-100/60">
-                              {f.status === 'in-game' ? `Playing at ${f.table}` : f.status === 'online' ? `Level ${f.level} · Online` : 'Offline'}
+                              {f.status === 'in-game' ? `${tr('playingAt')} ${f.table}` : f.status === 'online' ? `${tr('level')} ${f.level} · ${tr('online')}` : tr('offline')}
                             </p>
                           </div>
                           {f.status !== 'offline' && (
@@ -511,7 +580,7 @@ export default function MenuScreen() {
                               onClick={() => startVsComputer('classic', 4, 0)}
                               className="ls-btn ls-btn-green ls-font flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-[10px] text-white"
                             >
-                              <Zap size={10} /> PLAY
+                              <Zap size={10} /> {tr('play')}
                             </button>
                           )}
                         </div>
@@ -519,44 +588,65 @@ export default function MenuScreen() {
                     })}
                   </div>
                   <p className="mt-3 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-[10px] leading-relaxed text-fuchsia-100/60">
-                    Open a Private Table from Home and share the code to invite anyone.
+                    {tr('inviteNote')}
                   </p>
                 </div>
               )}
 
               {/* ---- COLLECTIONS (profile + achievements) ---- */}
-              {tab === 'collections' && (
+              {tab === 'profile' && (
                 <div className="space-y-3">
                   <div className="ls-panel rounded-2xl p-3.5">
                     <div className="flex items-center gap-3.5">
-                      <div className="relative">
-                        <AvatarRing avatar={profile.avatar} size={58} />
-                        <span
-                          className="ls-font absolute -bottom-1 -right-1.5 grid h-[22px] min-w-[22px] place-items-center rounded-full px-1 text-[10px] text-white"
-                          style={{ background: 'linear-gradient(180deg,#ff9d3c,#e8720c)', boxShadow: '0 2px 5px rgba(0,0,0,0.45), 0 0 0 2.5px #1b0630' }}
+                      <div className="relative shrink-0">
+                        <AvatarRing avatar={profile.avatar} size={64} />
+                        <button
+                          onClick={() => fileRef.current?.click()}
+                          className="absolute -bottom-1.5 -right-1.5 grid h-8 w-8 place-items-center rounded-full text-white"
+                          style={{ background: 'linear-gradient(180deg,#a05ce8,#5b1fa8)', border: '2px solid rgba(255,255,255,0.85)', boxShadow: '0 3px 8px rgba(10,2,30,0.5)' }}
+                          aria-label={tr('changePhoto')}
+                          title={tr('changePhoto')}
                         >
-                          {lvl.level}
-                        </span>
+                          <Camera size={14} />
+                        </button>
+                        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={pickPhoto} />
                       </div>
                       <div className="min-w-0 flex-1">
                         <input
                           value={profile.name}
                           onChange={(e) => updateProfile({ name: e.target.value.slice(0, 14) })}
                           className="ls-glass-input ls-font w-full rounded-xl px-3 py-2 text-sm font-bold text-white"
-                          aria-label="Your name"
+                          aria-label={tr('yourName')}
                           maxLength={14}
-                          placeholder="Your name"
+                          placeholder={tr('yourName')}
                         />
-                        <p className="ls-font mt-1.5 text-[10px] text-amber-200/85">LV {lvl.level} · {rankTitle(lvl.level)}</p>
-                        <p className="mt-0.5 text-[9px] text-fuchsia-100/60">{lvl.xpNow}/{lvl.xpNeed} wins to level {lvl.level + 1}</p>
+                        <div className="mt-1.5 flex items-center gap-1.5">
+                          <p className="ls-font text-[10px] text-amber-200/85">LV {lvl.level} · {rankTitle(lvl.level)}</p>
+                          {hasPhoto && (
+                            <button
+                              onClick={() => { updateProfile({ avatar: AVATARS[0] }); sfx.click() }}
+                              className="ls-font ml-auto inline-flex items-center gap-1 rounded-full bg-black/30 px-2 py-0.5 text-[8.5px] text-fuchsia-100/80 ring-1 ring-white/15"
+                            >
+                              <Trash2 size={9} /> {tr('removePhoto')}
+                            </button>
+                          )}
+                        </div>
+                        <p className="mt-0.5 text-[9px] text-fuchsia-100/60">{lvl.xpNow}/{lvl.xpNeed} {tr('toLevel')} {lvl.level + 1}</p>
                       </div>
                     </div>
-                    <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                      {[
-                        { label: 'Wins', value: profile.wins, tone: 'text-emerald-300' },
-                        { label: 'Losses', value: profile.losses, tone: 'text-rose-300' },
-                        { label: 'Win rate', value: `${winRate}%`, tone: 'text-amber-200' },
-                      ].map((s) => (
+                  </div>
+
+                  <div className="ls-panel rounded-2xl p-3.5">
+                    <p className="ls-font mb-2 text-xs text-amber-200">{tr('stats')}</p>
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      {([
+                        { label: tr('gamesPlayed'), value: totalGames, tone: 'text-white' },
+                        { label: tr('wins'), value: profile.wins, tone: 'text-emerald-300' },
+                        { label: tr('losses'), value: profile.losses, tone: 'text-rose-300' },
+                        { label: tr('winRate'), value: `${winRate}%`, tone: 'text-amber-200' },
+                        { label: tr('bestStreak'), value: bestStreak, tone: 'text-orange-300' },
+                        { label: tr('level'), value: lvl.level, tone: 'text-violet-300' },
+                      ] as Array<{ label: string; value: React.ReactNode; tone: string }>).map((s) => (
                         <div key={s.label} className="ls-panel rounded-xl py-2">
                           <p className={`ls-font text-base ${s.tone}`}>{s.value}</p>
                           <p className="text-[8px] uppercase tracking-wide text-fuchsia-100/50">{s.label}</p>
@@ -565,16 +655,22 @@ export default function MenuScreen() {
                     </div>
                   </div>
 
-                  <HistoryGraph history={profile.history} coins={profile.coins} />
+                  <HistoryGraph
+                    history={profile.history}
+                    coins={profile.coins}
+                    title={tr('recentTimeline')}
+                    empty={tr('playToSeeTimeline')}
+                    onPlay={() => { setSheet('table4'); setSheetMode('classic'); sfx.click() }}
+                  />
 
                   <div className="ls-panel rounded-2xl p-3.5">
-                    <p className="ls-font mb-2 text-xs text-amber-200">AVATAR COLLECTION</p>
+                    <p className="ls-font mb-2 text-xs text-amber-200">{tr('chooseAvatar')}</p>
                     <div className="flex flex-wrap gap-2">
                       {AVATARS.map((a) => (
                         <motion.button
                           key={a}
                           whileTap={{ scale: 0.9 }}
-                          onClick={() => updateProfile({ avatar: a })}
+                          onClick={() => { updateProfile({ avatar: a }); sfx.click() }}
                           className="grid h-10 w-10 place-items-center rounded-full text-xl"
                           style={
                             profile.avatar === a
@@ -590,7 +686,7 @@ export default function MenuScreen() {
                   </div>
 
                   <div className="ls-panel rounded-2xl p-3.5">
-                    <p className="ls-font mb-2 text-xs text-amber-200">ACHIEVEMENTS</p>
+                    <p className="ls-font mb-2 text-xs text-amber-200">{tr('achievements')}</p>
                     <div className="space-y-2">
                       {ACHIEVEMENTS.map((a) => {
                         const val = a.progress({ wins: profile.wins, losses: profile.losses, coins: profile.coins, gems: profile.gems })
@@ -632,16 +728,16 @@ export default function MenuScreen() {
                       <ChestArt size={92} />
                     </motion.span>
                     <span className="ls-font text-lg text-white" style={{ textShadow: '0 2px 0 rgba(150,80,0,0.7)' }}>
-                      {dailyClaimable ? `DAY ${(daily?.streak ?? 0) + 1} — CLAIM` : 'CLAIMED — BACK TOMORROW'}
+                      {dailyClaimable ? `${tr('day')} ${(daily?.streak ?? 0) + 1} — ${tr('claim')}` : tr('claimedBack')}
                     </span>
                     <span className="flex items-center gap-1 text-xs text-amber-100/85">
                       <CoinIcon size={13} />
-                      {DAILY_REWARDS[daily ? Math.min(6, daily.streak) : 0].toLocaleString()} coins
+                      {DAILY_REWARDS[daily ? Math.min(6, daily.streak) : 0].toLocaleString()} {tr('coinsShort')}
                     </span>
                   </motion.button>
 
                   <div className="ls-panel mt-3 rounded-2xl p-3">
-                    <p className="ls-font mb-2 text-xs text-amber-200">STREAK STARS</p>
+                    <p className="ls-font mb-2 text-xs text-amber-200">{tr('streakStars')}</p>
                     <div className="grid grid-cols-7 gap-1">
                       {DAILY_REWARDS.map((r, i) => {
                         const reached = (daily?.streak ?? 0) > i || (dailyClaimable && (daily?.streak ?? 0) === i)
@@ -661,7 +757,7 @@ export default function MenuScreen() {
                         )
                       })}
                     </div>
-                    <p className="mt-2 text-[10px] leading-relaxed text-fuchsia-100/60">Come back every day — the chest grows to 2,500 coins on day 7.</p>
+                    <p className="mt-2 text-[10px] leading-relaxed text-fuchsia-100/60">{tr('chestNote')}</p>
                   </div>
                 </div>
               )}
@@ -691,14 +787,14 @@ export default function MenuScreen() {
                     <div className="mb-3 flex items-center gap-2.5">
                       <div className="h-11 w-11">{sheet === 'table2' ? <Art2P /> : <Art4P />}</div>
                       <div>
-                        <h3 className="ls-font text-lg leading-tight text-white">{sheet === 'table2' ? '2 PLAYER' : '4 PLAYER'}</h3>
+                        <h3 className="ls-font text-lg leading-tight text-white">{sheet === 'table2' ? tr('twoPlayer') : tr('fourPlayer')}</h3>
                         <p className="text-[10px] text-fuchsia-100/60">
-                          {sheet === 'table2' ? '1 v 1 online table' : '4 seats · live players & bots'}
+                          {sheet === 'table2' ? tr('oneVOne') : tr('fourSeats')}
                         </p>
                       </div>
                     </div>
 
-                    <p className="ls-font mb-1.5 text-[10px] tracking-wide text-amber-200">GAME TYPE</p>
+                    <p className="ls-font mb-1.5 text-[10px] tracking-wide text-amber-200">{tr('gameType')}</p>
                     <div className="grid grid-cols-3 gap-1.5">
                       {(['classic', 'quick', 'master'] as GameMode[]).map((m) => (
                         <button
@@ -713,7 +809,7 @@ export default function MenuScreen() {
                       ))}
                     </div>
 
-                    <p className="ls-font mb-1.5 mt-3 text-[10px] tracking-wide text-amber-200">ENTRY STAKE</p>
+                    <p className="ls-font mb-1.5 mt-3 text-[10px] tracking-wide text-amber-200">{tr('entryStake')}</p>
                     <div className="grid grid-cols-4 gap-1.5">
                       {[...STAKES].map((s) => {
                         const afford = profile.coins >= s
@@ -739,10 +835,10 @@ export default function MenuScreen() {
                         className="ls-btn ls-btn-gold ls-font flex items-center justify-center gap-2 rounded-2xl py-3.5 text-base text-white"
                       >
                         {busy ? (
-                          <span className="inline-flex items-center gap-2"><Loader2 size={17} className="animate-spin" /> FINDING TABLE...</span>
+                          <span className="inline-flex items-center gap-2"><Loader2 size={17} className="animate-spin" /> {tr('findingTable')}</span>
                         ) : (
                           <>
-                            <Globe size={17} /> PLAY ONLINE
+                            <Globe size={17} /> {tr('playOnline')}
                           </>
                         )}
                       </motion.button>
@@ -751,22 +847,22 @@ export default function MenuScreen() {
                           onClick={() => startVsComputer(sheetMode, seats, stake)}
                           className="ls-btn ls-btn-green ls-font flex items-center justify-center gap-1 rounded-xl px-1 py-2.5 text-[11px] text-white"
                         >
-                          <Bot size={13} /> VS BOT
+                          <Bot size={13} /> {tr('vsBot')}
                         </button>
                         <button
                           onClick={() => startPass(sheetMode, seats, stake)}
                           className="ls-btn ls-font flex items-center justify-center gap-1 rounded-xl px-1 py-2.5 text-[11px] text-white"
                         >
-                          <Users size={13} /> PASS N PLAY
+                          <Users size={13} /> {tr('passNPlay')}
                         </button>
                       </div>
                     </div>
 
                     {!canPlay && (
                       <div className="mt-2.5 flex items-center gap-2 rounded-xl border border-rose-400/30 bg-rose-950/50 px-3 py-2">
-                        <span className="text-[11px] text-rose-200">Not enough coins for this stake.</span>
+                        <span className="text-[11px] text-rose-200">{tr('notEnoughCoins')}</span>
                         <button onClick={refillCoins} className="ls-font ml-auto rounded-full px-3 py-1 text-[10px] text-[#4a2c00]" style={{ background: 'linear-gradient(180deg,#ffe08a,#e09b1a)' }}>
-                          GET {FREE_REFILL.toLocaleString()} FREE
+                          {tr('freeRefillBtn')}
                         </button>
                       </div>
                     )}
@@ -779,12 +875,12 @@ export default function MenuScreen() {
                     <div className="mb-3 flex items-center gap-2.5">
                       <div className="h-11 w-11"><ArtPrivate /></div>
                       <div>
-                        <h3 className="ls-font text-lg leading-tight text-white">PRIVATE TABLE</h3>
-                        <p className="text-[10px] text-fuchsia-100/60">Room code with friends</p>
+                        <h3 className="ls-font text-lg leading-tight text-white">{tr('privateTable')}</h3>
+                        <p className="text-[10px] text-fuchsia-100/60">{tr('roomWithFriends')}</p>
                       </div>
                     </div>
 
-                    <p className="ls-font mb-1.5 text-[10px] tracking-wide text-amber-200">ENTRY STAKE</p>
+                    <p className="ls-font mb-1.5 text-[10px] tracking-wide text-amber-200">{tr('entryStake')}</p>
                     <div className="grid grid-cols-4 gap-1.5">
                       {[...STAKES].map((s) => {
                         const afford = profile.coins >= s
@@ -815,10 +911,10 @@ export default function MenuScreen() {
                       className="ls-btn ls-btn-gold ls-font mt-3.5 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-base text-white"
                     >
                       {busy ? (
-                        <span className="inline-flex items-center gap-2"><Loader2 size={17} className="animate-spin" /> CREATING...</span>
+                        <span className="inline-flex items-center gap-2"><Loader2 size={17} className="animate-spin" /> {tr('creating')}</span>
                       ) : (
                         <>
-                          <KeyRound size={17} /> CREATE ROOM
+                          <KeyRound size={17} /> {tr('createRoom')}
                         </>
                       )}
                     </motion.button>
@@ -827,7 +923,7 @@ export default function MenuScreen() {
                       <input
                         value={joinCode}
                         onChange={(e) => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
-                        placeholder="ENTER ROOM CODE"
+                        placeholder={tr('roomCode')}
                         className="ls-glass-input min-w-0 flex-1 rounded-xl px-3 py-2.5 text-center text-sm font-black tracking-[0.25em] text-white placeholder:tracking-normal placeholder:text-fuchsia-100/40"
                         aria-label="Room code"
                       />
@@ -836,15 +932,15 @@ export default function MenuScreen() {
                         disabled={!canPlay || joinCode.length < 3}
                         className="ls-btn ls-btn-green ls-font flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm text-white disabled:opacity-40"
                       >
-                        <Send size={13} /> JOIN
+                        <Send size={13} /> {tr('join')}
                       </button>
                     </div>
 
                     {!canPlay && (
                       <div className="mt-2.5 flex items-center gap-2 rounded-xl border border-rose-400/30 bg-rose-950/50 px-3 py-2">
-                        <span className="text-[11px] text-rose-200">Not enough coins for this stake.</span>
+                        <span className="text-[11px] text-rose-200">{tr('notEnoughCoins')}</span>
                         <button onClick={refillCoins} className="ls-font ml-auto rounded-full px-3 py-1 text-[10px] text-[#4a2c00]" style={{ background: 'linear-gradient(180deg,#ffe08a,#e09b1a)' }}>
-                          GET {FREE_REFILL.toLocaleString()} FREE
+                          {tr('freeRefillBtn')}
                         </button>
                       </div>
                     )}
@@ -857,12 +953,12 @@ export default function MenuScreen() {
                     <div className="mb-3 flex items-center gap-2.5">
                       <div className="h-11 w-11"><ArtOffline /></div>
                       <div>
-                        <h3 className="ls-font text-lg leading-tight text-white">OFFLINE</h3>
-                        <p className="text-[10px] text-fuchsia-100/60">Play instantly · free</p>
+                        <h3 className="ls-font text-lg leading-tight text-white">{tr('offline')}</h3>
+                        <p className="text-[10px] text-fuchsia-100/60">{tr('playInstant')}</p>
                       </div>
                     </div>
 
-                    <p className="ls-font mb-1.5 text-[10px] tracking-wide text-amber-200">GAME TYPE</p>
+                    <p className="ls-font mb-1.5 text-[10px] tracking-wide text-amber-200">{tr('gameType')}</p>
                     <div className="grid grid-cols-3 gap-1.5">
                       {(['classic', 'quick', 'master'] as GameMode[]).map((m) => (
                         <button
@@ -877,7 +973,7 @@ export default function MenuScreen() {
                       ))}
                     </div>
 
-                    <p className="ls-font mb-1.5 mt-3 text-[10px] tracking-wide text-amber-200">PLAYERS</p>
+                    <p className="ls-font mb-1.5 mt-3 text-[10px] tracking-wide text-amber-200">{tr('players')}</p>
                     <div className="grid grid-cols-2 gap-1.5">
                       {([2, 4] as Array<2 | 4>).map((n) => (
                         <button
@@ -886,7 +982,7 @@ export default function MenuScreen() {
                           data-active={offlineSeats === n}
                           className="ls-option ls-font flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[12px] text-white"
                         >
-                          <Users size={13} /> {n} PLAYERS
+                          <Users size={13} /> {n} {tr('players')}
                         </button>
                       ))}
                     </div>
@@ -897,13 +993,13 @@ export default function MenuScreen() {
                         onClick={() => startVsComputer(sheetMode, offlineSeats, 0)}
                         className="ls-btn ls-btn-gold ls-font flex items-center justify-center gap-2 rounded-2xl py-3.5 text-base text-white"
                       >
-                        <Bot size={18} /> VS COMPUTER
+                        <Bot size={18} /> {tr('vsComputer')}
                       </motion.button>
                       <button
                         onClick={() => startPass(sheetMode, offlineSeats, 0)}
                         className="ls-btn ls-btn-green ls-font flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[12px] text-white"
                       >
-                        <Users size={14} /> PASS N PLAY
+                        <Users size={14} /> {tr('passNPlay')}
                       </button>
                     </div>
                   </div>
@@ -917,8 +1013,8 @@ export default function MenuScreen() {
                         <Trophy size={22} />
                       </span>
                       <div>
-                        <h3 className="ls-font text-lg leading-tight text-white">LEADERBOARD</h3>
-                        <p className="text-[10px] text-fuchsia-100/60">Season 1 · resets every Monday</p>
+                        <h3 className="ls-font text-lg leading-tight text-white">{tr('leaderboard')}</h3>
+                        <p className="text-[10px] text-fuchsia-100/60">{tr('season')}</p>
                       </div>
                     </div>
                     <div className="ls-panel overflow-hidden rounded-2xl">
@@ -938,15 +1034,15 @@ export default function MenuScreen() {
                             </span>
                             <AvatarRing avatar={r.avatar} size={30} />
                             <span className={`ls-font min-w-0 flex-1 truncate text-xs ${'isYou' in r && r.isYou ? 'text-amber-200' : 'text-white'}`}>
-                              {r.name}{'isYou' in r && r.isYou ? ' (You)' : ''}
+                              {r.name}{'isYou' in r && r.isYou ? ` ${tr('you')}` : ''}
                             </span>
                             <span className="text-[10px] text-fuchsia-100/60">{r.trophies} 🏆</span>
-                            <span className="ls-font w-12 text-right text-[11px] text-amber-100">{r.wins} wins</span>
+                            <span className="ls-font w-12 text-right text-[11px] text-amber-100">{r.wins} {tr('winsShort')}</span>
                           </div>
                         ))
                       })()}
                     </div>
-                    <p className="mt-2 text-[10px] text-fuchsia-100/50">Wins from every mode count toward your rank.</p>
+                    <p className="mt-2 text-[10px] text-fuchsia-100/50">{tr('winsFromAll')}</p>
                   </div>
                 )}
 
@@ -968,7 +1064,7 @@ export default function MenuScreen() {
             exit={{ opacity: 0, y: 12 }}
             className="ls-sheet fixed bottom-24 left-1/2 z-[60] flex -translate-x-1/2 items-center gap-2 rounded-full px-4 py-2 text-xs text-white"
           >
-            <Copy size={13} className="text-emerald-300" /> Copied!
+            <Copy size={13} className="text-emerald-300" /> {tr('copied')}
           </motion.div>
         )}
       </AnimatePresence>
