@@ -15,17 +15,20 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  Bot, Check, ChevronRight, Copy, Flag, Gift, Globe,
-  KeyRound, Loader2, Send, Trophy,
+  Bell, Bot, CalendarDays, Check, ChevronRight, Copy, Flag, Gift, Globe,
+  KeyRound, Loader2, Play, Send, Settings, Trophy,
   Users, Volume2, VolumeX, Zap,
 } from 'lucide-react'
 import {
-  NavShop, NavFriends, NavHome, NavCollections, NavChest,
-  RailEvents, RailTrophy, RailClubs,
-  IconGear, IconStarGold, HomeGlyph,
+  NavShop, NavFriends, NavHome, NavCollections,
+  RailEvents, RailClubs,
+  IconStarGold, HomeGlyph,
   CrownArt, DecoDie, DecoToken, ChestArt,
 } from '@/components/ludo/icons'
 import { Art2P, Art4P, ArtPrivate, ArtOffline } from '@/components/ludo/MenuArt'
+import {
+  Coin3D, Gem3D, Chest3D, Trophy3D, Dice3D, Pawn2x3D, Pawn4x3D, Robot3D, Crown3D, Gift3D,
+} from '@/components/ludo/art3d'
 import HistoryGraph from '@/components/ludo/HistoryGraph'
 import { useLudo } from '@/stores/ludoStore'
 import { AVATARS, FREE_REFILL, STAKES } from '@/lib/ludo/constants'
@@ -38,9 +41,9 @@ type LobbyTab = 'home' | 'friends' | 'collections' | 'chest' | 'shop'
 type SheetKind = null | 'table2' | 'table4' | 'private' | 'offline' | 'ranks'
 
 const EVENTS = [
-  { icon: '💎', title: 'Season 1 is live', text: 'Climb the leaderboard and collect gems for every win.' },
-  { icon: '🎁', title: 'Daily login streak', text: 'Claim growing coin rewards every single day.' },
-  { icon: '🎉', title: 'Weekend tables', text: 'Bigger pots on Master mode every Saturday & Sunday.' },
+  { icon: <Gem3D size={20} />, title: 'Season 1 is live', text: 'Climb the leaderboard and collect gems for every win.' },
+  { icon: <Gift3D size={20} />, title: 'Daily login streak', text: 'Claim growing coin rewards every single day.' },
+  { icon: <Crown3D size={22} />, title: 'Weekend tables', text: 'Bigger pots on Master mode every Saturday & Sunday.' },
 ]
 
 // ---------- shared atoms ----------
@@ -77,6 +80,21 @@ function CurrencyChip({
         </span>
       )}
     </motion.button>
+  )
+}
+
+function PlayChip() {
+  return (
+    <span
+      aria-hidden
+      className="absolute bottom-0.5 right-0.5 grid h-7 w-7 place-items-center rounded-full"
+      style={{
+        background: 'linear-gradient(180deg,#ffe08a,#f0a10c)',
+        boxShadow: '0 2px 6px rgba(60,25,0,0.55), inset 0 1px 0 rgba(255,255,255,0.65)',
+      }}
+    >
+      <Play size={13} fill="#fff" className="translate-x-[1px] text-white" />
+    </span>
   )
 }
 
@@ -203,13 +221,13 @@ export default function MenuScreen() {
           />
           <CurrencyChip
             value={profile.coins.toLocaleString()}
-            icon={<CoinIcon size={15} />}
+            icon={<Coin3D size={24} />}
             onClick={refillCoins}
             label={`Coins ${profile.coins} — tap for free refill`}
           />
           <CurrencyChip
             value={profile.gems.toLocaleString()}
-            icon={<GemIcon size={15} />}
+            icon={<Gem3D size={22} />}
             onClick={() => setTab('shop')}
             label={`Gems ${profile.gems} — tap for the shop`}
             valueClass="text-teal-100"
@@ -221,6 +239,16 @@ export default function MenuScreen() {
               style={{ background: onlineStatus === 'connected' || onlineStatus === 'idle' || onlineStatus === 'lobby' ? '#4ade80' : '#f6c453' }}
               title={onlineStatus === 'connected' ? 'Server online' : 'Connecting...'}
             />
+            {/* notifications — same events panel as the rail button */}
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => { setEventsOpen((o) => !o); setSettingsOpen(false) }}
+              className="ls-lobby-chip relative grid h-9 w-9 place-items-center rounded-full text-fuchsia-100"
+              aria-label="Notifications"
+            >
+              <Bell size={19} />
+              <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-rose-500 px-1 text-[8px] text-white ring-2 ring-[#2b0a4a]">6</span>
+            </motion.button>
             {/* settings */}
             <div className="relative">
               <motion.button
@@ -229,7 +257,7 @@ export default function MenuScreen() {
                 className="ls-lobby-chip grid h-9 w-9 place-items-center rounded-full text-fuchsia-100"
                 aria-label="Settings"
               >
-                <IconGear size={22} />
+                <Settings size={20} />
               </motion.button>
               <AnimatePresence>
                 {settingsOpen && (
@@ -278,6 +306,19 @@ export default function MenuScreen() {
             >
               <Flag size={9} fill="#fff" /> Level {lvl.level}
             </span>
+            <div
+              className="mt-1.5 h-[5px] w-[112px] overflow-hidden rounded-full"
+              style={{ background: 'rgba(255,255,255,0.14)', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.35)' }}
+              title={`XP ${lvl.xpNow}/${lvl.xpNeed} to level ${lvl.level + 1}`}
+            >
+              <motion.div
+                className="h-full rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.max(6, lvl.pct)}%` }}
+                transition={{ duration: 0.9, ease: 'easeOut', delay: 0.25 }}
+                style={{ background: 'linear-gradient(90deg,#ffd76e,#ff9d3c)', boxShadow: '0 0 6px rgba(255,180,60,0.7)' }}
+              />
+            </div>
           </div>
 
           <span
@@ -329,7 +370,7 @@ export default function MenuScreen() {
             className="grid h-11 w-11 place-items-center rounded-full"
             aria-label="Leaderboard"
           >
-            <RailTrophy size={34} />
+            <Trophy3D size={30} />
           </motion.button>
 
           <motion.button
@@ -345,6 +386,25 @@ export default function MenuScreen() {
               )}
             </span>
             <span className="ls-font text-[8px] tracking-widest text-fuchsia-100/80">CLUBS</span>
+          </motion.button>
+
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setTab('chest')}
+            className="flex flex-col items-center gap-0.5"
+            aria-label="Daily rewards"
+          >
+            <span
+              className="grid h-11 w-11 place-items-center rounded-full"
+              style={{
+                background: 'linear-gradient(180deg,#7a2b6f,#4c1450)',
+                border: '2px solid rgba(255,255,255,0.28)',
+                boxShadow: '0 3px 8px rgba(20,4,45,0.5), inset 0 1px 0 rgba(255,255,255,0.25)',
+              }}
+            >
+              <CalendarDays size={18} className="text-amber-200" />
+            </span>
+            <span className="ls-font text-[8px] tracking-widest text-fuchsia-100/80">DAILY</span>
           </motion.button>
         </div>
 
@@ -366,7 +426,7 @@ export default function MenuScreen() {
             transition={{ repeat: Infinity, duration: 5.2, ease: 'easeInOut' }}
             aria-hidden
           >
-            <DecoDie value={5} size={40} tilt={-14} />
+            <Dice3D size={46} />
           </motion.div>
           <motion.div
             className="pointer-events-none absolute right-8 top-[30%] z-0"
@@ -406,7 +466,7 @@ export default function MenuScreen() {
           {/* big tiles */}
           <div className="relative z-10 grid grid-cols-2 gap-2.5">
             <motion.button
-              whileTap={{ scale: 0.96 }}
+              whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.02 }} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05, duration: 0.35, ease: 'easeOut' }}
               onClick={() => { setSheet('table2'); setSheetMode('classic') }}
               className="ls-tile-gold ls-shine relative flex h-[min(42vw,25vh,176px)] flex-col overflow-hidden rounded-2xl p-1.5"
               aria-label="Play 2 player"
@@ -416,12 +476,15 @@ export default function MenuScreen() {
                 animate={{ scale: [1, 1.25, 1] }}
                 transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
               />
-              <div className="min-h-0 flex-1"><Art2P /></div>
+              <div className="relative min-h-0 flex-1">
+                <div className="grid h-full place-items-center pb-0.5"><Pawn2x3D size={84} /></div>
+                <PlayChip />
+              </div>
               <span className="ls-font pb-1 text-center text-[15px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(150,80,0,0.7)' }}>2 PLAYER</span>
             </motion.button>
 
             <motion.button
-              whileTap={{ scale: 0.96 }}
+              whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.02 }} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12, duration: 0.35, ease: 'easeOut' }}
               onClick={() => setSheet('private')}
               className="ls-tile-purple ls-shine relative flex h-[min(42vw,25vh,176px)] flex-col overflow-hidden rounded-2xl p-1.5"
               aria-label="Open private table"
@@ -429,7 +492,10 @@ export default function MenuScreen() {
               <span className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full bg-black/35 text-amber-200" title="Invite with a code">
                 <KeyRound size={11} />
               </span>
-              <div className="min-h-0 flex-1"><ArtPrivate /></div>
+              <div className="relative min-h-0 flex-1">
+                <div className="grid h-full place-items-center pb-0.5"><Crown3D size={74} /></div>
+                <PlayChip />
+              </div>
               <span className="ls-font pb-1 text-center text-[13px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(40,10,90,0.7)' }}>PRIVATE TABLE</span>
             </motion.button>
           </div>
@@ -437,22 +503,28 @@ export default function MenuScreen() {
           {/* second row — 4 PLAYER + OFFLINE */}
           <div className="relative z-10 mt-2.5 grid grid-cols-2 gap-2.5 pb-1.5">
             <motion.button
-              whileTap={{ scale: 0.96 }}
+              whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.02 }} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.19, duration: 0.35, ease: 'easeOut' }}
               onClick={() => { setSheet('table4'); setSheetMode('classic') }}
               className="ls-tile-purple ls-shine relative flex h-[min(32vw,18vh,132px)] flex-col overflow-hidden rounded-2xl p-1.5"
               aria-label="Play 4 player"
             >
-              <div className="min-h-0 flex-1"><Art4P /></div>
+              <div className="relative min-h-0 flex-1">
+                <div className="grid h-full place-items-center pb-0.5"><Pawn4x3D size={74} /></div>
+                <PlayChip />
+              </div>
               <span className="ls-font pb-1 text-center text-[13px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(40,10,90,0.7)' }}>4 PLAYER</span>
             </motion.button>
 
             <motion.button
-              whileTap={{ scale: 0.96 }}
+              whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.02 }} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.26, duration: 0.35, ease: 'easeOut' }}
               onClick={() => { setSheet('offline'); setSheetMode('classic') }}
               className="ls-tile-green ls-shine relative flex h-[min(32vw,18vh,132px)] flex-col overflow-hidden rounded-2xl p-1.5"
               aria-label="Play offline — bots or pass and play"
             >
-              <div className="min-h-0 flex-1"><ArtOffline /></div>
+              <div className="relative min-h-0 flex-1">
+                <div className="grid h-full place-items-center pb-0.5"><Robot3D size={66} /></div>
+                <PlayChip />
+              </div>
               <span className="ls-font pb-1 text-center text-[13px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(10,60,30,0.7)' }}>OFFLINE</span>
             </motion.button>
           </div>
@@ -464,9 +536,9 @@ export default function MenuScreen() {
             {([
               { id: 'shop', icon: <NavShop size={30} />, label: 'Shop' },
               { id: 'friends', icon: <NavFriends size={30} />, label: 'Friends' },
-              { id: 'home', icon: <HomeGlyph size={26} />, label: 'Home', raised: true },
+              { id: 'home', icon: <HomeGlyph size={30} />, label: 'Home', raised: true },
               { id: 'collections', icon: <NavCollections size={30} />, label: 'Collections', badge: unlockedAchievements },
-              { id: 'chest', icon: <NavChest size={30} />, label: 'Chest', badge: dailyClaimable ? 1 : undefined },
+              { id: 'chest', icon: <Chest3D size={30} />, label: 'Chest', badge: dailyClaimable ? 1 : undefined },
             ] as Array<{ id: LobbyTab; icon: React.ReactNode; label: string; raised?: boolean; badge?: number }>).map((item) => {
               const active = tab === item.id
               if (item.raised) {
@@ -474,7 +546,7 @@ export default function MenuScreen() {
                   <button key={item.id} onClick={() => setTab(item.id)} className="relative flex flex-col items-center" aria-current={active ? 'page' : undefined}>
                     <motion.span
                       whileTap={{ scale: 0.9 }}
-                      className="ls-tile-purple -mt-6 grid h-12 w-14 place-items-center rounded-2xl text-white"
+                      className={`ls-tile-purple -mt-7 grid h-14 w-16 place-items-center rounded-2xl text-white ${active ? 'ls-nav-home-glow' : ''}`}
                       style={{ boxShadow: '0 6px 0 #3b1580, 0 12px 20px rgba(20,5,50,0.55), inset 0 2px 0 rgba(255,255,255,0.35)' }}
                     >
                       {item.icon}
