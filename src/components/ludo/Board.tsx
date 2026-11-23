@@ -173,10 +173,15 @@ export default function Board({
   const prevTrackRef = useRef<Map<string, number>>(new Map())
   const [captureFx, setCaptureFx] = useState<Array<{ key: string; color: Color; c: number; r: number }>>([])
   const [burstFx, setBurstFx] = useState<Array<{ key: string; color: Color; x: number; y: number }>>([])
+  const [entryFx, setEntryFx] = useState<Array<{ key: string; color: Color; x: number; y: number }>>([])
+  const [finishFx, setFinishFx] = useState<Array<{ key: string; color: Color; x: number; y: number }>>([])
   const [flightFx, setFlightFx] = useState<
     Array<{ key: string; color: Color; tokenId: number; fromX: number; fromY: number; toX: number; toY: number }>
   >([])
   const shakeControls = useAnimationControls()
+  // fx removal timers live on a ref: re-running this effect (any game
+  // update) must never cancel a pending fx removal
+  const fxTimersRef = useRef<Array<ReturnType<typeof setTimeout>>>([])
 
   // Fit the square board into the REAL available box between the plates.
   // Fixed vh caps can overflow on short screens (then the dice/plates
@@ -207,6 +212,8 @@ export default function Board({
     const rings: Array<{ key: string; color: Color; c: number; r: number }> = []
     const bursts: Array<{ key: string; color: Color; x: number; y: number }> = []
     const flights: Array<{ key: string; color: Color; tokenId: number; fromX: number; fromY: number; toX: number; toY: number }> = []
+    const entries: Array<{ key: string; color: Color; x: number; y: number }> = []
+    const finishes: Array<{ key: string; color: Color; x: number; y: number }> = []
     for (const p of game.players) {
       for (const t of p.tokens) {
         const k = `${p.color}-${t.id}`
@@ -224,10 +231,21 @@ export default function Board({
             flights.push({ key: `f-${k}-${stamp}`, color: p.color, tokenId: t.id, fromX: from.x, fromY: from.y, toX: to.x, toY: to.y })
           }
         }
+        // pawn bursting out of its yard → launch-pad ring on the start cell
+        if (prev === 'yard' && t.location === 'track') {
+          const start = tokenScreenPos(p.color, t.id, 'track', START_IDX[p.color], 0, -1, 1)
+          entries.push({ key: `e-${k}-${Date.now()}`, color: p.color, x: start.x, y: start.y })
+        }
+        // pawn reaching the center → gold star fountain (HOME!)
+        if (prev && prev !== 'finished' && t.location === 'finished') {
+          const slot = FINISH_SLOTS[p.color][t.id % 4]
+          finishes.push({ key: `w-${k}-${Date.now()}`, color: p.color, x: slot.c, y: slot.r })
+        }
         if (t.location === 'track') prevTrackRef.current.set(k, t.trackIdx)
         prevLocRef.current.set(k, t.location)
       }
     }
+    const push = (fn: () => void, ms: number) => fxTimersRef.current.push(setTimeout(fn, ms))
     if (rings.length > 0) {
       sfx.whoosh()
       void shakeControls.start({
@@ -240,14 +258,19 @@ export default function Board({
       setCaptureFx((fx) => [...fx, ...rings])
       setBurstFx((fx) => [...fx, ...bursts])
       setFlightFx((fx) => [...fx, ...flights])
-      const t1 = setTimeout(() => setCaptureFx((fx) => fx.filter((f) => !rKeys.includes(f.key))), 950)
-      const t2 = setTimeout(() => setBurstFx((fx) => fx.filter((f) => !bKeys.includes(f.key))), 750)
-      const t3 = setTimeout(() => setFlightFx((fx) => fx.filter((f) => !flights.some((g) => g.key === f.key))), 850)
-      return () => {
-        clearTimeout(t1)
-        clearTimeout(t2)
-        clearTimeout(t3)
-      }
+      push(() => setCaptureFx((fx) => fx.filter((f) => !rKeys.includes(f.key))), 950)
+      push(() => setBurstFx((fx) => fx.filter((f) => !bKeys.includes(f.key))), 750)
+      push(() => setFlightFx((fx) => fx.filter((f) => !flights.some((g) => g.key === f.key))), 850)
+    }
+    if (entries.length > 0) {
+      const eKeys = entries.map((f) => f.key)
+      setEntryFx((fx) => [...fx, ...entries])
+      push(() => setEntryFx((fx) => fx.filter((f) => !eKeys.includes(f.key))), 700)
+    }
+    if (finishes.length > 0) {
+      const wKeys = finishes.map((f) => f.key)
+      setFinishFx((fx) => [...fx, ...finishes])
+      push(() => setFinishFx((fx) => fx.filter((f) => !wKeys.includes(f.key))), 1000)
     }
   }, [game, shakeControls])
 
@@ -380,6 +403,10 @@ export default function Board({
                       'linear-gradient(125deg, rgba(255,255,255,0.34) 0%, rgba(255,255,255,0.10) 30%, transparent 52%, rgba(255,255,255,0.16) 100%)',
                   }}
                 />
+                {/* live pulse ring on the TURN player's yard */}
+                {isTurn && (
+                  <span aria-hidden className="ls-yard-live pointer-events-none absolute inset-0 rounded-[9%]" />
+                )}
                 {/* glossy white slot panel */}
                 <div
                   className="absolute rounded-[10%]"
@@ -539,15 +566,18 @@ export default function Board({
                 return (
                   <div
                     key={`fin-${color}-${t.id}`}
-                    className="absolute"
+                    className="ls-finish-float absolute"
                     style={{
                       left: `calc(${(slot.c / BOARD_SIZE) * 100}% - ${(w / 2 / BOARD_SIZE) * 100}%)`,
                       top: `calc(${(slot.r / BOARD_SIZE) * 100}% - ${(w / 2 / BOARD_SIZE) * 100}%)`,
                       width: pct(w),
                       height: pct(w),
                       pointerEvents: 'none',
+                      animationDelay: `${t.id * 0.4}s`,
                     }}
                   >
+                    {/* golden halo: this pawn made it HOME */}
+                    <span aria-hidden className="ls-finish-halo pointer-events-none absolute inset-[-36%] rounded-full" />
                     <Pawn3D color={color} glow={false} tap={false} onClick={() => undefined} tokenId={t.id} uid={`f${color}${t.id}`} upright={upright} />
                   </div>
                 )
@@ -592,35 +622,62 @@ export default function Board({
                       zIndex: hopping ? 30 : isGlowing ? 25 : 15 + Math.max(0, stackIndex),
                       willChange: 'transform',
                     }}
-                    initial={{ scale: 0.5, opacity: 0 }}
+                    initial={{ scale: 0.3, opacity: 0 }}
                     animate={{
                       x: `${xPct}%`,
                       y: `${yPct}%`,
-                      scale: hopping ? 1.26 : 1,
+                      scale: hopping ? 1.24 : 1,
                       opacity: 1,
                     }}
                     transition={{
                       x: GLIDE,
                       y: GLIDE,
-                      scale: { type: 'spring', stiffness: 400, damping: hopping ? 13 : 21, mass: 0.5 },
+                      scale: { type: 'spring', stiffness: 430, damping: hopping ? 12 : 16, mass: 0.5 },
                       opacity: { duration: 0.18, ease: 'easeOut' },
                     }}
                   >
-                    <Pawn3D
-                      color={p.color}
-                      glow={isGlowing}
-                      tap={clickable(p.color, t.id)}
-                      onClick={() => onTokenClick(t.id)}
-                      tokenId={t.id}
-                      uid={`t${p.color}${t.id}`}
-                      upright={upright}
+                    {/* ground glow stays ON THE FLOOR while the pawn leaps over it */}
+                    <span
+                      className="pointer-events-none absolute inset-[-16%] rounded-full transition-opacity duration-150"
+                      style={{ boxShadow: `0 8px 18px ${COLOR_HEX[p.color].glow}`, opacity: hopping ? 1 : 0 }}
                     />
-                    {hopping && (
-                      <span
-                        className="pointer-events-none absolute inset-[-18%] rounded-full"
-                        style={{ boxShadow: `0 8px 18px ${COLOR_HEX[p.color].glow}` }}
+                    {/* hop arc: the pawn itself does the jump */}
+                    <motion.div
+                      className="relative h-full w-full"
+                      initial={false}
+                      animate={hopping ? 'hop' : 'idle'}
+                      variants={{
+                        idle: { y: 0 },
+                        hop: { y: [0, -11, 0], transition: { duration: 0.46, times: [0, 0.42, 1], ease: 'easeInOut' } },
+                      }}
+                    >
+                      <Pawn3D
+                        color={p.color}
+                        glow={isGlowing}
+                        tap={clickable(p.color, t.id)}
+                        onClick={() => onTokenClick(t.id)}
+                        tokenId={t.id}
+                        uid={`t${p.color}${t.id}`}
+                        upright={upright}
                       />
-                    )}
+                    </motion.div>
+                    {/* dust motes kicked up while hopping */}
+                    {hopping &&
+                      [0, 1, 2].map((i) => (
+                        <span
+                          key={`mote-${i}`}
+                          aria-hidden
+                          className="ls-hop-mote pointer-events-none absolute rounded-full"
+                          style={{
+                            left: `${14 + i * 26}%`,
+                            bottom: '2%',
+                            width: '22%',
+                            height: '22%',
+                            background: COLOR_HEX[p.color].light,
+                            animationDelay: `${i * 0.12}s`,
+                          }}
+                        />
+                      ))}
                   </motion.div>
                 )
               })
@@ -662,8 +719,8 @@ export default function Board({
                 key={b.key}
                 className="pointer-events-none absolute z-[45]"
                 style={{
-                  left: pct(b.x),
-                  top: pct(b.y),
+                  left: `${b.x}%`,
+                  top: `${b.y}%`,
                   width: pct(2.6),
                   height: pct(2.6),
                   x: '-50%',
@@ -704,6 +761,35 @@ export default function Board({
             ))}
           </AnimatePresence>
 
+          {/* launch-pad ring when a pawn bursts out of its yard */}
+          <AnimatePresence>
+            {entryFx.map((e) => (
+              <motion.div
+                key={e.key}
+                className="pointer-events-none absolute z-[44]"
+                style={{
+                  left: `${e.x}%`,
+                  top: `${e.y}%`,
+                  width: pct(2.2),
+                  height: pct(2.2),
+                  x: '-50%',
+                  y: '-50%',
+                }}
+                initial={{ opacity: 0.9, scale: 0.35 }}
+                animate={{ opacity: 0, scale: 1.6 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.62, ease: 'easeOut' }}
+                aria-hidden
+              >
+                <span
+                  className="absolute inset-0 rounded-full"
+                  style={{ border: `3px solid ${COLOR_HEX[e.color].main}`, boxShadow: `0 0 14px 5px ${COLOR_HEX[e.color].glow}` }}
+                />
+                <span className="absolute inset-[24%] rounded-full border-2 border-white/90" />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+
           {/* capture burst — sparkling ring where a knocked-out token lands home */}
           <AnimatePresence>
             {captureFx.map((f) => (
@@ -729,6 +815,55 @@ export default function Board({
                   style={{ border: `3px solid ${COLOR_HEX[f.color].light}`, boxShadow: `0 0 16px 5px ${COLOR_HEX[f.color].glow}` }}
                 />
                 <span className="absolute inset-[26%] rounded-full border-2 border-dashed" style={{ borderColor: '#ffd977' }} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+
+          {/* gold star fountain when a pawn reaches the center (HOME!) */}
+          <AnimatePresence>
+            {finishFx.map((f) => (
+              <motion.div
+                key={f.key}
+                className="pointer-events-none absolute z-[46]"
+                style={{
+                  left: pct(f.x),
+                  top: pct(f.y),
+                  width: pct(2.8),
+                  height: pct(2.8),
+                  x: '-50%',
+                  y: '-50%',
+                }}
+                initial={{ scale: 0.3, opacity: 1 }}
+                animate={{ scale: 1.8, opacity: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.9, ease: 'easeOut' }}
+                aria-hidden
+              >
+                <span
+                  className="absolute inset-0 rounded-full"
+                  style={{ border: '3px solid #ffd977', boxShadow: '0 0 18px 7px rgba(246,196,83,0.85)' }}
+                />
+                {[
+                  [1, 1],
+                  [-1, 1],
+                  [1, -1],
+                  [-1, -1],
+                  [0, 1.3],
+                  [0, -1.3],
+                ].map(([sx, sy], i) => (
+                  <motion.span
+                    key={i}
+                    className="absolute left-1/2 top-1/2"
+                    style={{ width: pct(0.5), height: pct(0.5), marginLeft: pct(-0.25), marginTop: pct(-0.25) }}
+                    initial={{ x: 0, y: 0, scale: 1, opacity: 1, rotate: 0 }}
+                    animate={{ x: sx * 30, y: sy * 30, scale: 0.25, opacity: 0, rotate: 120 }}
+                    transition={{ duration: 0.7, ease: 'easeOut', delay: i * 0.04 }}
+                  >
+                    <svg viewBox="0 0 24 24" className="h-full w-full">
+                      <path d="M12 2l2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2z" fill="#ffe08a" stroke="#fff7d9" strokeWidth="1" />
+                    </svg>
+                  </motion.span>
+                ))}
               </motion.div>
             ))}
           </AnimatePresence>

@@ -97,7 +97,7 @@ export default function Pawn3D({ color, glow, tap, onClick, tokenId, uid, uprigh
   const g = (name: string) => `${name}-${uid}`
 
   const svg = (
-    <svg viewBox="0 0 64 64" className="h-full w-full overflow-visible" style={{ filter: 'drop-shadow(0 1.5px 1.5px rgba(8,10,30,0.30))' }}>
+    <svg viewBox="0 0 64 64" className="h-full w-full overflow-visible" style={{ filter: 'drop-shadow(0 2px 2.5px rgba(8,10,30,0.38))' }}>
       <defs>
         <radialGradient id={g('sh')} cx="0.5" cy="0.5" r="0.5">
           <stop offset="0" stopColor="rgba(6,8,24,0.55)" />
@@ -162,6 +162,8 @@ export default function Pawn3D({ color, glow, tap, onClick, tokenId, uid, uprigh
       {/* engraved inner ring on the base plate */}
       <ellipse cx="32" cy="45.6" rx="11.6" ry="3.9" fill="none" stroke="rgba(0,0,0,0.18)" strokeWidth="1" />
       <ellipse cx="32" cy="45.3" rx="11.6" ry="3.9" fill="none" stroke="rgba(255,255,255,0.30)" strokeWidth="0.8" />
+      {/* colored bounce light pooling on the base plate (cheap GI) */}
+      <ellipse cx="32" cy="44.9" rx="9.4" ry="2.5" fill={s.head[1]} opacity="0.22" />
       {/* front bevel light */}
       <path
         d="M 19 47.9 A 13.6 4.4 0 0 0 45 47.9"
@@ -230,6 +232,14 @@ export default function Pawn3D({ color, glow, tap, onClick, tokenId, uid, uprigh
         strokeWidth="1.7"
         strokeLinecap="round"
       />
+      {/* upper-right rim light — completes the glossy sphere read */}
+      <path
+        d="M 36.8 7.6 A 7.9 7.9 0 0 1 39.9 12.8"
+        fill="none"
+        stroke="rgba(255,255,255,0.55)"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
       {/* reflected light along the head's lower rim */}
       <path
         d="M 26.2 18.2 A 8.4 8.4 0 0 0 37.8 18.2"
@@ -279,15 +289,18 @@ export default function Pawn3D({ color, glow, tap, onClick, tokenId, uid, uprigh
 
       {/* --- gem sparkles (4-point stars, both materials) --- */}
       <path
+        className="ls-twinkle"
         d="M 24.9 6.9 Q 25.5 8.3 26.9 8.9 Q 25.5 9.5 24.9 10.9 Q 24.3 9.5 22.9 8.9 Q 24.3 8.3 24.9 6.9 Z"
         fill="#ffffff"
         opacity="0.95"
       />
       <path
+        className="ls-twinkle"
+        style={{ animationDelay: '1.2s' }}
         d="M 37.6 14.6 Q 38 15.5 38.9 15.9 Q 38 16.3 37.6 17.2 Q 37.2 16.3 36.3 15.9 Q 37.2 15.5 37.6 14.6 Z"
         fill="#ffffff"
         opacity="0.7"
- />
+      />
     </svg>
   )
 

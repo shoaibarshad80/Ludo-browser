@@ -381,6 +381,77 @@ body {
   }
 }
 
+/* ---------- board juice: hop dust, finish halo, live yard, gem twinkle ---------- */
+
+/* dust motes kicked up under a hopping pawn (while it is in the air) */
+.ls-hop-mote {
+  animation: ls-hop-mote 0.55s ease-out infinite;
+}
+@keyframes ls-hop-mote {
+  0% {
+    transform: translateY(2px) scale(1);
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(-13px) scale(0.25);
+    opacity: 0;
+  }
+}
+
+/* finished pawns bob gently in the center, wearing a golden halo */
+.ls-finish-float {
+  animation: ls-finish-float 3.2s ease-in-out infinite;
+}
+@keyframes ls-finish-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6%);
+  }
+}
+.ls-finish-halo {
+  background: radial-gradient(
+    circle,
+    rgba(255, 224, 138, 0.8) 0%,
+    rgba(246, 196, 83, 0.32) 50%,
+    transparent 74%
+  );
+  animation: ls-safe-pulse 3s ease-in-out infinite;
+}
+
+/* soft pulsing ring on the turn player's yard (whose move it is) */
+.ls-yard-live {
+  box-shadow:
+    inset 0 0 0 3px rgba(255, 255, 255, 0.95),
+    inset 0 0 12px rgba(255, 255, 255, 0.5);
+  animation: ls-yard-live 1.9s ease-in-out infinite;
+}
+@keyframes ls-yard-live {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+/* slow twinkle on the pawn's gem sparkles */
+.ls-twinkle {
+  animation: ls-twinkle 2.6s ease-in-out infinite;
+}
+@keyframes ls-twinkle {
+  0%,
+  100% {
+    opacity: 0.95;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+
 /* ---------- misc ---------- */
 
 .ls-glass-input {
@@ -399,11 +470,24 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ls-spin-slow, .ls-float, .ls-safe-halo {
+  .ls-spin-slow, .ls-float, .ls-safe-halo, .ls-finish-float, .ls-finish-halo, .ls-yard-live, .ls-twinkle {
     animation: none !important;
   }
   .ls-safe-halo {
     opacity: 0.7;
+  }
+  .ls-finish-halo {
+    opacity: 0.6;
+  }
+  .ls-yard-live {
+    opacity: 0.7;
+  }
+  .ls-twinkle {
+    opacity: 0.85;
+  }
+  .ls-hop-mote {
+    animation: none !important;
+    opacity: 0 !important;
   }
   .ls-shine::after {
     animation: none !important;
