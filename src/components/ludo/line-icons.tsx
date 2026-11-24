@@ -121,3 +121,15 @@ export const LnProfile = ({ size = 24, className, strokeWidth = 1.8 }: P) => (
 export const LnChat = ({ size = 24, className, strokeWidth = 1.8 }: P) => (
   <MessageCircle {...base({ size, strokeWidth })} className={className} />
 )
+/** Treasure chest — arched lid, seam band + keyhole, 1.8 stroke. */
+export function LnChest({ size = 24, className, strokeWidth = 1.8 }: P) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} className={className} fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M4.5 11.5V18a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-6.5" />
+      <path d="M4.5 11.5C4.5 8.46 6.96 6.5 10 6.5h4c3.04 0 5.5 1.96 5.5 5" />
+      <path d="M4.5 11.5h15" />
+      <path d="M12 11.5v3" />
+      <circle cx="12" cy="16" r="0.9" />
+    </svg>
+  )
+}
