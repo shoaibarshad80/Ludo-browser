@@ -98,6 +98,56 @@ export function LudoLogo({ compact = false }: { compact?: boolean }) {
 
 // ---------- avatar ----------
 
+/** Avatar wrapped in a circular XP progress ring (brief: XP ring around the avatar). */
+export function AvatarXP({
+  avatar,
+  pct,
+  size = 52,
+}: {
+  avatar: string
+  /** 0-100 progress to the next level */
+  pct: number
+  size?: number
+}) {
+  const clamped = Math.min(100, Math.max(0, pct))
+  const stroke = 4.5
+  const r = (size - stroke - 2) / 2
+  const c = 2 * Math.PI * r
+  return (
+    <span className="relative grid shrink-0 place-items-center" style={{ width: size, height: size }}>
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        className="absolute inset-0 -rotate-90"
+        aria-hidden
+      >
+        <defs>
+          <linearGradient id="xp-ring-g" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#FFDC85" />
+            <stop offset="1" stopColor="#F59E0B" />
+          </linearGradient>
+        </defs>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth={stroke} />
+        <circle
+          className="ls-xp-ring"
+          style={{ '--c': `${c}` } as React.CSSProperties}
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="url(#xp-ring-g)"
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={c * (1 - clamped / 100)}
+        />
+      </svg>
+      <AvatarRing avatar={avatar} size={size - stroke * 2 - 4} />
+    </span>
+  )
+}
+
 export function AvatarRing({
   avatar,
   color,
