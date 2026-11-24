@@ -425,7 +425,7 @@ export function LudoBadge({ size = 120, className }: IconProps) {
           <stop offset="1" stopColor="rgba(31,41,66,0.14)" />
         </radialGradient>
         <linearGradient id="lb-gloss" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="rgba(255,255,255,0.34)" />
+          <stop offset="0" stopColor="rgba(255,255,255,0.20)" />
           <stop offset="1" stopColor="rgba(255,255,255,0.02)" />
         </linearGradient>
         <radialGradient id="lb-home" cx="0.5" cy="0.36" r="0.9">
@@ -513,7 +513,7 @@ export function LudoBadge({ size = 120, className }: IconProps) {
       <ellipse cx="57.4" cy="54.4" rx="1.9" ry="1.3" fill="rgba(255,255,255,0.85)" transform="rotate(-24 57.4 54.4)" />
 
       {/* glass gloss dome + sparkle */}
-      <rect x="12" y="12" width="96" height="40" rx="20" fill="url(#lb-gloss)" />
+      <rect x="12" y="12" width="96" height="34" rx="17" fill="url(#lb-gloss)" />
       <path d="M93.4 23.2l1.5 3.2 3.2 1.5-3.2 1.5-1.5 3.2-1.5-3.2-3.2-1.5 3.2-1.5z" fill="rgba(255,255,255,0.7)" />
     </svg>
   )
