@@ -388,7 +388,7 @@ export default function MenuScreen() {
                 <LudoBadge size={92} className="h-full w-full" />
               </div>
             </div>
-            <h1 className="ls-font ls-hero-word">LUDO</h1>
+            <h1 className="ls-font ls-hero-word mt-2">LUDO</h1>
             <p className="ls-font ls-hero-star">STAR</p>
           </div>
 
@@ -404,12 +404,12 @@ export default function MenuScreen() {
           <div className="relative z-10 grid grid-cols-2 gap-2.5">
             <button
               onClick={() => { setSheet('table2'); setSheetMode('classic'); sfx.click() }}
-              className="ls-tile-gold ls-shine ls-rise relative flex h-[min(44vw,26vh,184px)] flex-col overflow-hidden rounded-2xl p-1.5"
+              className="ls-tile-gold ls-shine ls-rise relative flex h-[min(36vw,20vh,148px)] flex-col overflow-hidden rounded-2xl p-1.5"
               style={{ '--d': '60ms' } as React.CSSProperties}
               aria-label="Play 2 player"
             >
               <div className="relative min-h-0 flex-1">
-                <div className="grid h-full place-items-center pb-0.5"><Pawn2x3D size={84} /></div>
+                <div className="grid h-full place-items-center pb-0.5"><Pawn2x3D size={70} /></div>
                 <PlayChip />
               </div>
               <span className="ls-font pb-1 text-center text-[15px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(150,80,0,0.7)' }}>{tr('twoPlayer')}</span>
@@ -417,12 +417,12 @@ export default function MenuScreen() {
 
             <button
               onClick={() => { setSheet('private'); sfx.click() }}
-              className="ls-tile-purple ls-shine ls-rise relative flex h-[min(44vw,26vh,184px)] flex-col overflow-hidden rounded-2xl p-1.5"
+              className="ls-tile-purple ls-shine ls-rise relative flex h-[min(36vw,20vh,148px)] flex-col overflow-hidden rounded-2xl p-1.5"
               style={{ '--d': '140ms' } as React.CSSProperties}
               aria-label="Open private table"
             >
               <div className="relative min-h-0 flex-1">
-                <div className="grid h-full place-items-center pb-0.5"><Crown3D size={74} /></div>
+                <div className="grid h-full place-items-center pb-0.5"><Crown3D size={62} /></div>
                 <PlayChip />
               </div>
               <span className="ls-font pb-1 text-center text-[13px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(40,10,90,0.7)' }}>{tr('privateTable')}</span>
@@ -433,12 +433,12 @@ export default function MenuScreen() {
           <div className="relative z-10 mt-2.5 grid grid-cols-2 gap-2.5 pb-1.5">
             <button
               onClick={() => { setSheet('table4'); setSheetMode('classic'); sfx.click() }}
-              className="ls-tile-purple ls-shine ls-rise relative flex h-[min(34vw,19vh,140px)] flex-col overflow-hidden rounded-2xl p-1.5"
+              className="ls-tile-purple ls-shine ls-rise relative flex h-[min(30vw,16vh,124px)] flex-col overflow-hidden rounded-2xl p-1.5"
               style={{ '--d': '220ms' } as React.CSSProperties}
               aria-label="Play 4 player"
             >
               <div className="relative min-h-0 flex-1">
-                <div className="grid h-full place-items-center pb-0.5"><Pawn4x3D size={74} /></div>
+                <div className="grid h-full place-items-center pb-0.5"><Pawn4x3D size={62} /></div>
                 <PlayChip />
               </div>
               <span className="ls-font pb-1 text-center text-[13px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(40,10,90,0.7)' }}>{tr('fourPlayer')}</span>
@@ -446,12 +446,12 @@ export default function MenuScreen() {
 
             <button
               onClick={() => { setSheet('offline'); setSheetMode('classic'); sfx.click() }}
-              className="ls-tile-green ls-shine ls-rise relative flex h-[min(34vw,19vh,140px)] flex-col overflow-hidden rounded-2xl p-1.5"
+              className="ls-tile-green ls-shine ls-rise relative flex h-[min(30vw,16vh,124px)] flex-col overflow-hidden rounded-2xl p-1.5"
               style={{ '--d': '300ms' } as React.CSSProperties}
               aria-label="Play offline — bots or pass and play"
             >
               <div className="relative min-h-0 flex-1">
-                <div className="grid h-full place-items-center pb-0.5"><Robot3D size={66} /></div>
+                <div className="grid h-full place-items-center pb-0.5"><Robot3D size={56} /></div>
                 <PlayChip />
               </div>
               <span className="ls-font pb-1 text-center text-[13px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(10,60,30,0.7)' }}>{tr('offline')}</span>

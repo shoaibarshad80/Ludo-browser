@@ -415,14 +415,38 @@ export function LudoBadge({ size = 120, className }: IconProps) {
           <stop offset="0.55" stopColor="#2a8ee0" />
           <stop offset="1" stopColor="#1d5c9e" />
         </radialGradient>
+        <radialGradient id="lb-plate" cx="0.5" cy="0.4" r="0.8">
+          <stop offset="0" stopColor="#fbf8f2" />
+          <stop offset="0.75" stopColor="#f4f1ea" />
+          <stop offset="1" stopColor="#e4dfd0" />
+        </radialGradient>
+        <radialGradient id="lb-vign" cx="0.5" cy="0.42" r="0.78">
+          <stop offset="0.55" stopColor="rgba(31,41,66,0)" />
+          <stop offset="1" stopColor="rgba(31,41,66,0.14)" />
+        </radialGradient>
+        <linearGradient id="lb-gloss" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="rgba(255,255,255,0.34)" />
+          <stop offset="1" stopColor="rgba(255,255,255,0.02)" />
+        </linearGradient>
+        <radialGradient id="lb-home" cx="0.5" cy="0.36" r="0.9">
+          <stop offset="0" stopColor="#ffffff" />
+          <stop offset="0.7" stopColor="#f6f3ea" />
+          <stop offset="1" stopColor="#e2dccb" />
+        </radialGradient>
+        <radialGradient id="lb-star" cx="0.35" cy="0.3" r="1">
+          <stop offset="0" stopColor="#ff9d8e" />
+          <stop offset="0.5" stopColor="#e5453c" />
+          <stop offset="1" stopColor="#a82820" />
+        </radialGradient>
       </defs>
 
       {/* outer rim + bevel */}
       <rect x="4" y="4" width="112" height="112" rx="28" fill="url(#lb-rim)" />
       <rect x="5" y="5" width="110" height="110" rx="27" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.8" />
 
-      {/* cream board plate */}
-      <rect x="12" y="12" width="96" height="96" rx="21" fill="#f4f1ea" />
+      {/* cream board plate with soft vignette */}
+      <rect x="12" y="12" width="96" height="96" rx="21" fill="url(#lb-plate)" />
+      <rect x="12" y="12" width="96" height="96" rx="21" fill="url(#lb-vign)" />
       <rect x="12.6" y="12.6" width="94.8" height="94.8" rx="20.4" fill="none" stroke="rgba(0,0,0,0.12)" strokeWidth="1.4" />
 
       {/* four home quadrants */}
@@ -461,8 +485,9 @@ export function LudoBadge({ size = 120, className }: IconProps) {
         </g>
       </g>
 
-      {/* white cross paths */}
-      <path d="M18 57h30v6H18zM72 57h30v6H72zM57 18h6v30h-6zM57 72h6v30h-6z" fill="#f4f1ea" />
+      {/* white cross paths (soft drop for depth) */}
+      <path d="M18 58h30v6H18zM72 58h30v6H72zM57 19h6v30h-6zM57 73h6v30h-6z" fill="rgba(31,41,66,0.16)" />
+      <path d="M18 57h30v6H18zM72 57h30v6H72zM57 18h6v30h-6zM57 72h6v30h-6z" fill="#f7f4ed" />
       {/* path cell hints */}
       <g fill="rgba(31,41,66,0.14)">
         <rect x="29" y="57.8" width="5.4" height="5.4" rx="1.5" />
@@ -475,19 +500,21 @@ export function LudoBadge({ size = 120, className }: IconProps) {
         <rect x="56.8" y="97" width="5.4" height="5" rx="1.5" />
       </g>
 
-      {/* center home with red star */}
-      <circle cx="60" cy="60" r="14.5" fill="#ffffff" stroke="rgba(0,0,0,0.14)" strokeWidth="1.2" />
-      <circle cx="60" cy="60" r="10.4" fill="none" stroke="#e6e1d2" strokeWidth="1.5" />
+      {/* center home with glossy red star */}
+      <circle cx="60" cy="60" r="14.5" fill="url(#lb-home)" stroke="rgba(0,0,0,0.16)" strokeWidth="1.2" />
+      <circle cx="60" cy="60" r="10.4" fill="none" stroke="#ddd6c4" strokeWidth="1.4" />
       <path
-        d="M60 50.4l3 6.1 6.7.9-4.9 4.7 1.2 6.6-6-3.2-6 3.2 1.2-6.6-4.9-4.7 6.7-.9z"
-        fill="#e5453c"
-        stroke="#a82820"
-        strokeWidth="1"
+        d="M60 49.6l3.2 6.4 7 .9-5.1 4.9 1.3 6.9-6.4-3.4-6.4 3.4 1.3-6.9-5.1-4.9 7-.9z"
+        fill="url(#lb-star)"
+        stroke="#9c231c"
+        strokeWidth="1.1"
         strokeLinejoin="round"
       />
+      <ellipse cx="57.4" cy="54.4" rx="1.9" ry="1.3" fill="rgba(255,255,255,0.85)" transform="rotate(-24 57.4 54.4)" />
 
-      {/* top gloss */}
-      <ellipse cx="43" cy="21" rx="35" ry="11" fill="rgba(255,255,255,0.2)" />
+      {/* glass gloss dome + sparkle */}
+      <rect x="12" y="12" width="96" height="40" rx="20" fill="url(#lb-gloss)" />
+      <path d="M93.4 23.2l1.5 3.2 3.2 1.5-3.2 1.5-1.5 3.2-1.5-3.2-3.2-1.5 3.2-1.5z" fill="rgba(255,255,255,0.7)" />
     </svg>
   )
 }
