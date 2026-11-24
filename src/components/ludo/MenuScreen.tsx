@@ -506,7 +506,7 @@ export default function MenuScreen() {
           {/* daily reward strip — 7-day streak, today highlighted */}
           <button
             onClick={onDailyTap}
-            className="ls-glass-card ls-rise relative z-10 flex w-full flex-col gap-2 rounded-[20px] p-2.5 text-left"
+            className="ls-glass-card ls-rise relative z-10 flex w-full shrink-0 flex-col gap-2 rounded-[20px] p-2.5 text-left"
             style={{ '--d': '40ms' } as React.CSSProperties}
             title={dailyClaimable ? tr('tapToClaim') : tr('claimedBack')}
             aria-label={tr('dailyReward')}
@@ -555,7 +555,7 @@ export default function MenuScreen() {
           <motion.button
             whileTap={{ scale: 0.97 }}
             onClick={quickPlay}
-            className="ls-rise relative z-10 mt-3 flex h-[54px] w-full items-center rounded-[20px] px-4"
+            className="ls-rise relative z-10 mt-3 flex h-[54px] w-full shrink-0 items-center rounded-[20px] px-4"
             style={{
               '--d': '100ms',
               background: 'linear-gradient(180deg,#ffc94d 0%,#f5a623 58%,#ef8f0d 100%)',
@@ -573,7 +573,7 @@ export default function MenuScreen() {
           </motion.button>
 
           {/* mode cards — short 2x2 glass cards, high on the page */}
-          <div className="relative z-10 mt-3 grid grid-cols-2 gap-3 pb-2">
+          <div className="relative z-10 mt-3 grid shrink-0 grid-cols-2 gap-3 pb-2">
             {([
               { id: 'table2', art: <Pawn2x3D size={40} />, label: tr('twoPlayer'), sub: tr('card2Sub'), d: '160ms' },
               { id: 'private', art: <Crown3D size={40} />, label: tr('privateTable'), sub: tr('cardPrivateSub'), d: '220ms' },
@@ -594,11 +594,11 @@ export default function MenuScreen() {
                 >
                   {card.art}
                 </span>
-                <span className="flex min-w-0 flex-1 flex-col pb-1">
+                <span className="flex min-w-0 flex-1 flex-col pb-1 pr-3">
                   <span className="ls-font text-[17px] font-semibold leading-[1.02] text-white" style={{ textShadow: '0 1.5px 0 rgba(20,4,40,0.6)' }}>
                     {card.label}
                   </span>
-                  <span className="mt-1 truncate text-[10.5px] leading-tight text-white/75">{card.sub}</span>
+                  <span className="mt-1 truncate text-[10px] leading-tight text-white/75">{card.sub}</span>
                 </span>
                 <span
                   className="absolute bottom-2 right-2 grid h-[26px] w-[26px] place-items-center rounded-full text-[#3A1D00]"
