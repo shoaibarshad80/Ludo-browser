@@ -598,7 +598,7 @@ export default function MenuScreen() {
                   <span className="ls-font text-[17px] font-semibold leading-[1.02] text-white" style={{ textShadow: '0 1.5px 0 rgba(20,4,40,0.6)' }}>
                     {card.label}
                   </span>
-                  <span className="mt-1 truncate text-[10px] leading-tight text-white/75">{card.sub}</span>
+                  <span className="mt-1 line-clamp-2 text-[10px] leading-tight text-white/75">{card.sub}</span>
                 </span>
                 <span
                   className="absolute bottom-2 right-2 grid h-[26px] w-[26px] place-items-center rounded-full text-[#3A1D00]"
