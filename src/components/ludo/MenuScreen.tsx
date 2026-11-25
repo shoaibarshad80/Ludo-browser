@@ -20,7 +20,7 @@ import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Bot, Camera, Check, ChevronRight, Copy, Flag, Gift, Globe,
-  KeyRound, Loader2, Play, Send, Settings, Trash2, Trophy,
+  KeyRound, Loader2, Play, Send, Settings, ShoppingBag, Trash2, Trophy,
   Users, Zap,
 } from 'lucide-react'
 import {
@@ -93,6 +93,65 @@ function PlayChip() {
     >
       <Play size={13} fill="#fff" className="translate-x-[1px] text-white" />
     </span>
+  )
+}
+
+// floating side-rail icon button (44px touch target) that flanks the play tiles
+type SideTone = 'gold' | 'purple' | 'green' | 'blue'
+
+function SideRailButton({
+  label,
+  tone,
+  onClick,
+  badge,
+  dot,
+  children,
+}: {
+  label: string
+  tone: SideTone
+  onClick: () => void
+  badge?: number
+  dot?: string
+  children: React.ReactNode
+}) {
+  const tones: Record<SideTone, { bg: string; edge: string }> = {
+    gold: { bg: 'linear-gradient(180deg,#ffe08a 0%,#f0a10c 58%,#df8f0b 100%)', edge: '#a05f08' },
+    purple: { bg: 'linear-gradient(180deg,#b06ef5 0%,#7c2fd4 55%,#5b1fa8 100%)', edge: '#3b1580' },
+    green: { bg: 'linear-gradient(180deg,#5fd47c 0%,#2f9e57 55%,#1f7d41 100%)', edge: '#16632f' },
+    blue: { bg: 'linear-gradient(180deg,#5ec8f5 0%,#2b8fd6 55%,#1673c9 100%)', edge: '#0d4f8a' },
+  }
+  const tn = tones[tone]
+  return (
+    <motion.button
+      whileTap={{ scale: 0.9 }}
+      onClick={() => { onClick(); sfx.click() }}
+      className="relative grid h-11 w-11 shrink-0 place-items-center rounded-full text-white"
+      style={{
+        background: tn.bg,
+        boxShadow: `0 4px 0 ${tn.edge}, 0 8px 18px rgba(10,2,30,0.45), inset 0 2px 0 rgba(255,255,255,0.45)`,
+      }}
+      aria-label={label}
+      title={label}
+    >
+      {children}
+      {badge ? (
+        <span
+          className="ls-font ls-badge-pulse absolute -right-1 -top-1 grid h-[16px] min-w-[16px] place-items-center rounded-full px-1 text-[9px] font-bold leading-none text-[#3A1D00]"
+          style={{
+            background: 'linear-gradient(180deg,#ffc94d 0%,#f5a623 58%,#ef8f0d 100%)',
+            boxShadow: '0 0 0 2px rgba(14,5,30,0.95), 0 2px 5px rgba(0,0,0,0.4)',
+          }}
+        >
+          {badge}
+        </span>
+      ) : null}
+      {dot ? (
+        <span
+          className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full ring-2 ring-[#2a0a3d]"
+          style={{ background: dot }}
+        />
+      ) : null}
+    </motion.button>
   )
 }
 
@@ -380,78 +439,38 @@ export default function MenuScreen() {
 
         {/* ============ MAIN (LUDO hero + play tiles) ============ */}
         <main className="relative flex min-h-0 flex-1 flex-col px-3">
-          {/* LUDO hero — emblem + wordmark (transform-only float), centered with equal top/bottom space */}
-          <div className="pointer-events-none relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center">
+          {/* LUDO hero — compact emblem + wordmark pinned above the centered play tiles */}
+          <div className="pointer-events-none relative z-10 flex shrink-0 flex-col items-center pt-1">
             <div className="ls-hero-float relative">
               <span aria-hidden className="ls-hero-halo absolute -inset-4 rounded-[34%]" />
               <div className="aspect-square h-[min(20vh,92px)]">
                 <LudoBadge size={92} className="h-full w-full" />
               </div>
             </div>
-            <h1 className="ls-font ls-hero-word mt-2">LUDO</h1>
+            <h1 className="ls-font ls-hero-word mt-1.5">LUDO</h1>
             <p className="ls-font ls-hero-star">STAR</p>
           </div>
 
-          {/* ============ DAILY REWARD strip — tap left for chest details, pill claims instantly ============ */}
-          <div className="ls-panel ls-panel-gold relative z-10 mb-2.5 mt-2.5 flex shrink-0 items-center gap-2 rounded-2xl p-2">
-            <button
-              onClick={() => { setTab('chest'); sfx.click() }}
-              className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
-              aria-label={`${tr('dailyReward')} — ${tr('chest')}`}
-            >
-              <span className={`shrink-0 ${dailyClaimable ? 'ls-chest-wiggle' : ''}`}>
-                <ChestArt size={34} />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="ls-font block truncate text-[12.5px] leading-tight text-white">
-                  {dailyClaimable ? `${tr('dailyReward')} · ${tr('day')} ${(daily?.streak ?? 0) + 1}` : tr('claimedBack')}
-                </span>
-                <span className="mt-0.5 flex items-center gap-1 text-[10px] text-amber-100/90">
-                  <CoinIcon size={11} />
-                  {DAILY_REWARDS[daily ? Math.min(6, daily.streak) : 0].toLocaleString()} {tr('coinsShort')}
-                </span>
-              </span>
-              <span className="flex shrink-0 items-center gap-[3px]" aria-hidden>
-                {DAILY_REWARDS.map((r, i) => {
-                  const reached = (daily?.streak ?? 0) > i || (dailyClaimable && (daily?.streak ?? 0) === i)
-                  return <span key={i} className={`h-[7px] w-[7px] rounded-full ${reached ? 'bg-amber-300' : 'bg-white/20'}`} />
-                })}
-              </span>
-            </button>
-            {dailyClaimable ? (
-              <motion.button
-                whileTap={{ scale: 0.92 }}
-                onClick={() => { claimDaily(); sfx.click() }}
-                className="ls-font min-h-[42px] shrink-0 rounded-full px-3.5 text-[11px] font-semibold tracking-wide text-[#3A1D00]"
-                style={{
-                  background: 'linear-gradient(180deg,#ffe08a 0%,#f4ad38 55%,#df8f0b 100%)',
-                  boxShadow: '0 3px 0 #8a5a06, 0 6px 14px rgba(12,2,28,0.45), inset 0 2px 0 rgba(255,255,255,0.6)',
-                }}
-                aria-label={`${tr('claim')} ${tr('dailyReward')}`}
-              >
-                {tr('claim')}
-              </motion.button>
-            ) : (
-              <span
-                className="ls-font grid h-[42px] w-[42px] shrink-0 place-items-center rounded-full text-[15px] text-emerald-300"
-                style={{ background: 'rgba(16,185,129,0.16)', boxShadow: 'inset 0 0 0 1.5px rgba(52,211,153,0.45)' }}
-                aria-hidden
-              >
-                ✓
-              </span>
-            )}
-          </div>
+          {/* ============ MIDDLE — side rail icons flank the play tiles; the tile block is
+               vertically centered so the space above and below it is always equal ============ */}
+          <div className="relative z-10 flex min-h-0 flex-1 items-center">
+            <div className="flex w-full items-center gap-2">
 
-          {/* two CSS-only floaters (composited transform, no JS loop) */}
-          <div className="ls-float-a pointer-events-none absolute left-5 top-[20%] z-0" aria-hidden>
-            <DecoDie value={5} size={30} tilt={14} />
-          </div>
-          <div className="ls-float-b pointer-events-none absolute right-6 top-[62%] z-0" aria-hidden>
-            <DecoToken color="blue" size={20} />
-          </div>
+              {/* left rail — daily reward + win stars */}
+              <div className="flex shrink-0 flex-col gap-2.5">
+                <SideRailButton label={tr('dailyReward')} tone="gold" badge={dailyClaimable ? 1 : 0} onClick={() => setTab('chest')}>
+                  <Gift size={20} />
+                </SideRailButton>
+                <SideRailButton label={tr('winStars')} tone="purple" onClick={() => setSheet('ranks')}>
+                  <Trophy size={20} />
+                </SideRailButton>
+              </div>
+
+              {/* play tiles — centered column */}
+              <div className="flex min-w-0 flex-1 flex-col gap-2.5">
 
           {/* first row — 2 PLAYER + PRIVATE TABLE */}
-          <div className="relative z-10 grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-2 gap-2.5">
             <button
               onClick={() => { setSheet('table2'); setSheetMode('classic'); sfx.click() }}
               className="ls-tile-gold ls-shine ls-rise relative flex h-[min(36vw,20vh,148px)] flex-col overflow-hidden rounded-2xl p-1.5"
@@ -480,7 +499,7 @@ export default function MenuScreen() {
           </div>
 
           {/* second row — 4 PLAYER + OFFLINE */}
-          <div className="relative z-10 mt-2.5 grid grid-cols-2 gap-2.5 pb-1.5">
+          <div className="grid grid-cols-2 gap-2.5">
             <button
               onClick={() => { setSheet('table4'); setSheetMode('classic'); sfx.click() }}
               className="ls-tile-purple ls-shine ls-rise relative flex h-[min(30vw,16vh,124px)] flex-col overflow-hidden rounded-2xl p-1.5"
@@ -506,6 +525,77 @@ export default function MenuScreen() {
               </div>
               <span className="ls-font pb-1 text-center text-[13px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(10,60,30,0.7)' }}>{tr('offline')}</span>
             </button>
+          </div>
+              </div>
+
+              {/* right rail — friends + shop */}
+              <div className="flex shrink-0 flex-col gap-2.5">
+                <SideRailButton label={tr('friends')} tone="green" dot={onlineFriends > 0 ? '#4ade80' : undefined} onClick={() => setTab('friends')}>
+                  <Users size={20} />
+                </SideRailButton>
+                <SideRailButton label={tr('shop')} tone="blue" onClick={() => setTab('shop')}>
+                  <ShoppingBag size={20} />
+                </SideRailButton>
+              </div>
+            </div>
+          </div>
+
+          {/* two CSS-only floaters (composited transform, no JS loop) — kept clear of the rails */}
+          <div className="ls-float-a pointer-events-none absolute left-4 top-[20%] z-0" aria-hidden>
+            <DecoDie value={5} size={30} tilt={14} />
+          </div>
+          <div className="ls-float-b pointer-events-none absolute bottom-[22%] right-4 z-0" aria-hidden>
+            <DecoToken color="blue" size={20} />
+          </div>
+
+          {/* ============ DAILY REWARD strip — bottom widget above the nav, pill claims instantly ============ */}
+          <div className="ls-panel ls-panel-gold relative z-10 mb-2 flex shrink-0 items-center gap-2 rounded-2xl p-1.5">
+            <button
+              onClick={() => { setTab('chest'); sfx.click() }}
+              className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
+              aria-label={`${tr('dailyReward')} — ${tr('chest')}`}
+            >
+              <span className={`shrink-0 ${dailyClaimable ? 'ls-chest-wiggle' : ''}`}>
+                <ChestArt size={30} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="ls-font block truncate text-[12.5px] leading-tight text-white">
+                  {dailyClaimable ? `${tr('dailyReward')} · ${tr('day')} ${(daily?.streak ?? 0) + 1}` : tr('claimedBack')}
+                </span>
+                <span className="mt-0.5 flex items-center gap-1 text-[10px] text-amber-100/90">
+                  <CoinIcon size={11} />
+                  {DAILY_REWARDS[daily ? Math.min(6, daily.streak) : 0].toLocaleString()} {tr('coinsShort')}
+                </span>
+              </span>
+              <span className="flex shrink-0 items-center gap-[3px]" aria-hidden>
+                {DAILY_REWARDS.map((r, i) => {
+                  const reached = (daily?.streak ?? 0) > i || (dailyClaimable && (daily?.streak ?? 0) === i)
+                  return <span key={i} className={`h-[7px] w-[7px] rounded-full ${reached ? 'bg-amber-300' : 'bg-white/20'}`} />
+                })}
+              </span>
+            </button>
+            {dailyClaimable ? (
+              <motion.button
+                whileTap={{ scale: 0.92 }}
+                onClick={() => { claimDaily(); sfx.click() }}
+                className="ls-font min-h-[40px] shrink-0 rounded-full px-3.5 text-[11px] font-semibold tracking-wide text-[#3A1D00]"
+                style={{
+                  background: 'linear-gradient(180deg,#ffe08a 0%,#f4ad38 55%,#df8f0b 100%)',
+                  boxShadow: '0 3px 0 #8a5a06, 0 6px 14px rgba(12,2,28,0.45), inset 0 2px 0 rgba(255,255,255,0.6)',
+                }}
+                aria-label={`${tr('claim')} ${tr('dailyReward')}`}
+              >
+                {tr('claim')}
+              </motion.button>
+            ) : (
+              <span
+                className="ls-font grid h-[40px] w-[40px] shrink-0 place-items-center rounded-full text-[15px] text-emerald-300"
+                style={{ background: 'rgba(16,185,129,0.16)', boxShadow: 'inset 0 0 0 1.5px rgba(52,211,153,0.45)' }}
+                aria-hidden
+              >
+                ✓
+              </span>
+            )}
           </div>
         </main>
 
