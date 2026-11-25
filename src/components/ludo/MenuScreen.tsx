@@ -380,8 +380,8 @@ export default function MenuScreen() {
 
         {/* ============ MAIN (LUDO hero + play tiles) ============ */}
         <main className="relative flex min-h-0 flex-1 flex-col px-3">
-          {/* LUDO hero — emblem + wordmark (transform-only float) */}
-          <div className="pointer-events-none relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center pb-1.5">
+          {/* LUDO hero — emblem + wordmark (transform-only float), centered with equal top/bottom space */}
+          <div className="pointer-events-none relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center">
             <div className="ls-hero-float relative">
               <span aria-hidden className="ls-hero-halo absolute -inset-4 rounded-[34%]" />
               <div className="aspect-square h-[min(20vh,92px)]">
@@ -390,6 +390,56 @@ export default function MenuScreen() {
             </div>
             <h1 className="ls-font ls-hero-word mt-2">LUDO</h1>
             <p className="ls-font ls-hero-star">STAR</p>
+          </div>
+
+          {/* ============ DAILY REWARD strip — tap left for chest details, pill claims instantly ============ */}
+          <div className="ls-panel ls-panel-gold relative z-10 mt-2.5 flex shrink-0 items-center gap-2 rounded-2xl p-2">
+            <button
+              onClick={() => { setTab('chest'); sfx.click() }}
+              className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
+              aria-label={`${tr('dailyReward')} — ${tr('chest')}`}
+            >
+              <span className={`shrink-0 ${dailyClaimable ? 'ls-chest-wiggle' : ''}`}>
+                <ChestArt size={34} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="ls-font block truncate text-[12.5px] leading-tight text-white">
+                  {dailyClaimable ? `${tr('dailyReward')} · ${tr('day')} ${(daily?.streak ?? 0) + 1}` : tr('claimedBack')}
+                </span>
+                <span className="mt-0.5 flex items-center gap-1 text-[10px] text-amber-100/90">
+                  <CoinIcon size={11} />
+                  {DAILY_REWARDS[daily ? Math.min(6, daily.streak) : 0].toLocaleString()} {tr('coinsShort')}
+                </span>
+              </span>
+              <span className="flex shrink-0 items-center gap-[3px]" aria-hidden>
+                {DAILY_REWARDS.map((r, i) => {
+                  const reached = (daily?.streak ?? 0) > i || (dailyClaimable && (daily?.streak ?? 0) === i)
+                  return <span key={i} className={`h-[7px] w-[7px] rounded-full ${reached ? 'bg-amber-300' : 'bg-white/20'}`} />
+                })}
+              </span>
+            </button>
+            {dailyClaimable ? (
+              <motion.button
+                whileTap={{ scale: 0.92 }}
+                onClick={() => { claimDaily(); sfx.click() }}
+                className="ls-font min-h-[42px] shrink-0 rounded-full px-3.5 text-[11px] font-semibold tracking-wide text-[#3A1D00]"
+                style={{
+                  background: 'linear-gradient(180deg,#ffe08a 0%,#f4ad38 55%,#df8f0b 100%)',
+                  boxShadow: '0 3px 0 #8a5a06, 0 6px 14px rgba(12,2,28,0.45), inset 0 2px 0 rgba(255,255,255,0.6)',
+                }}
+                aria-label={`${tr('claim')} ${tr('dailyReward')}`}
+              >
+                {tr('claim')}
+              </motion.button>
+            ) : (
+              <span
+                className="ls-font grid h-[42px] w-[42px] shrink-0 place-items-center rounded-full text-[15px] text-emerald-300"
+                style={{ background: 'rgba(16,185,129,0.16)', boxShadow: 'inset 0 0 0 1.5px rgba(52,211,153,0.45)' }}
+                aria-hidden
+              >
+                ✓
+              </span>
+            )}
           </div>
 
           {/* two CSS-only floaters (composited transform, no JS loop) */}

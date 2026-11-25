@@ -176,6 +176,18 @@ body {
   50% { transform: scale(1.22); }
 }
 
+/* claimable chest wiggle — transform-only, runs only when reward is ready */
+.ls-chest-wiggle {
+  animation: ls-chest-wiggle 2.4s ease-in-out infinite;
+  will-change: transform;
+}
+@keyframes ls-chest-wiggle {
+  0%, 30%, 100% { transform: rotate(0deg) scale(1); }
+  8% { transform: rotate(-7deg) scale(1.06); }
+  16% { transform: rotate(7deg) scale(1.06); }
+  24% { transform: rotate(-4deg) scale(1.03); }
+}
+
 .ls-sheet {
   background: linear-gradient(165deg, rgba(56, 14, 88, 0.985), rgba(34, 8, 58, 0.99));
   border: 1.5px solid rgba(216, 180, 254, 0.28);
@@ -596,6 +608,9 @@ body {
     opacity: 0.85;
   }
   .ls-badge-pulse {
+    animation: none !important;
+  }
+  .ls-chest-wiggle {
     animation: none !important;
   }
   .ls-hop-mote {

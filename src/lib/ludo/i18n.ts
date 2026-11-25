@@ -90,6 +90,7 @@ const EN: Dict = {
   inviteNote: 'Open a Private Table from Home and share the code to invite anyone.',
   play: 'PLAY',
   // chest
+  dailyReward: 'DAILY REWARD',
   claim: 'CLAIM',
   claimedBack: 'CLAIMED — BACK TOMORROW',
   streakStars: 'STREAK STARS',
@@ -188,6 +189,7 @@ const UR: Dict = {
   streakStars: 'سلسلہ ستارے',
   chestNote: 'روز واپس آئیں — ستویں دن صندوق 2,500 سکے ہو جاتا ہے۔',
   day: 'دن',
+  dailyReward: 'روزانہ انعام',
   coinsShort: 'سکے',
   leaderboard: 'لیڈر بورڈ',
   you: '(آپ)',
@@ -279,6 +281,7 @@ const HI: Dict = {
   streakStars: 'स्ट्रीक स्टार',
   chestNote: 'रोज़ वापस आएं — सातवें दिन संदूक 2,500 सिक्के हो जाता है।',
   day: 'दिन',
+  dailyReward: 'दैनिक इनाम',
   coinsShort: 'सिक्के',
   leaderboard: 'लीडरबोर्ड',
   you: '(आप)',
