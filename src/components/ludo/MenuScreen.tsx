@@ -393,7 +393,7 @@ export default function MenuScreen() {
           </div>
 
           {/* ============ DAILY REWARD strip — tap left for chest details, pill claims instantly ============ */}
-          <div className="ls-panel ls-panel-gold relative z-10 mt-2.5 flex shrink-0 items-center gap-2 rounded-2xl p-2">
+          <div className="ls-panel ls-panel-gold relative z-10 mb-2.5 mt-2.5 flex shrink-0 items-center gap-2 rounded-2xl p-2">
             <button
               onClick={() => { setTab('chest'); sfx.click() }}
               className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
