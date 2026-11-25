@@ -439,9 +439,10 @@ export default function MenuScreen() {
           {/* HERO flex-1: emblem floats centered in the middle space — tiles below are
               fixed landscape (wider than tall), so the leftover height lives in the middle
               exactly like the Ludo Star lobby; short windows shrink hero via vh caps. */}
-          <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center pt-5">
-            {/* side icon rails — above the boxes, aligned with their outer edges */}
-            <div className="absolute left-0 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-2.5">
+          <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center pt-4">
+            {/* side icon rails — pulled down to sit directly ABOVE the play boxes
+                (no more floating mid-hero with empty space around them) */}
+            <div className="absolute bottom-0 left-0 z-20 flex flex-col gap-2.5">
               <SideRailButton label={tr('dailyReward')} tone="gold" badge={dailyClaimable ? 1 : 0} onClick={() => setTab('chest')}>
                 <Gift size={20} />
               </SideRailButton>
@@ -449,7 +450,7 @@ export default function MenuScreen() {
                 <Trophy size={20} />
               </SideRailButton>
             </div>
-            <div className="absolute right-0 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-2.5">
+            <div className="absolute bottom-0 right-0 z-20 flex flex-col gap-2.5">
               <SideRailButton label={tr('friends')} tone="green" dot={onlineFriends > 0 ? '#4ade80' : undefined} onClick={() => setTab('friends')}>
                 <Users size={20} />
               </SideRailButton>
@@ -465,10 +466,10 @@ export default function MenuScreen() {
             <div className="ls-float-b pointer-events-none absolute right-4 top-[10%] z-0" aria-hidden>
               <DecoDie value={3} size={22} tilt={-12} />
             </div>
-            <div className="pointer-events-none absolute bottom-[10%] left-6 z-0" aria-hidden>
+            <div className="pointer-events-none absolute left-7 top-[26%] z-0" aria-hidden>
               <DecoToken color="red" size={20} />
             </div>
-            <div className="ls-float-b pointer-events-none absolute bottom-[4%] right-8 z-0" aria-hidden>
+            <div className="ls-float-b pointer-events-none absolute right-7 top-[40%] z-0" aria-hidden>
               <DecoToken color="blue" size={18} />
             </div>
 
@@ -490,8 +491,8 @@ export default function MenuScreen() {
 
           {/* ============ PLAY BOXES — 2x2 landscape tiles (WIDER than tall):
               fixed height min(34vw,19vh,142px) keeps each box wide-format on every
-              phone; mb-5 gives a clear gap above the bottom nav. ============ */}
-          <div className="relative z-10 mb-5 flex flex-col gap-2.5">
+              phone; mb-7 gives a clear breathing gap above the bottom nav. ============ */}
+          <div className="relative z-10 mb-7 flex flex-col gap-2.5">
 
           {/* first row — 2 PLAYER + PRIVATE TABLE */}
           <div className="grid h-[min(34vw,19vh,142px)] grid-cols-2 gap-2.5">
