@@ -296,11 +296,11 @@ export default function MenuScreen() {
   }
 
   return (
-    <div className="ls-bg-lobby fixed inset-0 z-0 overflow-hidden">
+    <div className="ls-bg-lobby fixed inset-0 z-0 overflow-y-auto overflow-x-hidden">
       {/* desktop ambience outside the phone column */}
       <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(60% 55% at 50% 42%, rgba(255,255,255,0.10) 0%, transparent 60%)' }} />
 
-      <div className="relative mx-auto flex h-full w-full max-w-[430px] flex-col">
+      <div className="relative mx-auto flex h-full min-h-[560px] w-full max-w-[430px] flex-col">
 
         {/* ============ TOP BAR (currency + settings) ============ */}
         <div className="flex items-center gap-1.5 px-2.5 pt-2.5">
@@ -436,7 +436,10 @@ export default function MenuScreen() {
           {/* ============ HERO ZONE — same-to-same with Ludo Star: emblem + wordmark centered,
                gold crown on the board, dice & pawns flanking it. The four side icons sit at
                the outer edges ABOVE the play boxes, x-aligned with them. ============ */}
-          <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center">
+          {/* HERO (5) vs TILES (6) share the free height proportionally:
+              tall phones -> big play boxes (no dead space), short windows ->
+              hero shrinks with the viewport so nothing ever overlaps. */}
+          <div className="relative z-10 flex min-h-0 flex-[5] flex-col items-center justify-center pt-5">
             {/* side icon rails — above the boxes, aligned with their outer edges */}
             <div className="absolute left-0 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-2.5">
               <SideRailButton label={tr('dailyReward')} tone="gold" badge={dailyClaimable ? 1 : 0} onClick={() => setTab('chest')}>
@@ -473,11 +476,11 @@ export default function MenuScreen() {
             <div className="pointer-events-none relative z-10 flex flex-col items-center">
               <div className="ls-hero-float relative">
                 <span aria-hidden className="ls-hero-halo absolute -inset-4 rounded-[34%]" />
-                <div className="absolute -top-[24px] left-1/2 z-20 -translate-x-1/2">
-                  <Crown3D size={48} />
+                <div className="absolute -top-[20px] left-1/2 z-20 -translate-x-1/2">
+                  <Crown3D size={44} />
                 </div>
-                <div className="aspect-square h-[min(22vh,108px)]">
-                  <LudoBadge size={108} className="h-full w-full" />
+                <div className="aspect-square h-[min(13vh,96px)]">
+                  <LudoBadge size={96} className="h-full w-full" />
                 </div>
               </div>
               <h1 className="ls-font ls-hero-word mt-1.5">LUDO</h1>
@@ -486,18 +489,18 @@ export default function MenuScreen() {
           </div>
 
           {/* ============ PLAY BOXES — 2x2, equal heights, full width (same-to-same) ============ */}
-          <div className="relative z-10 mb-2 flex shrink-0 flex-col gap-2.5">
+          <div className="relative z-10 mb-2 flex min-h-0 flex-[6] flex-col gap-2.5">
 
           {/* first row — 2 PLAYER + PRIVATE TABLE */}
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid min-h-0 flex-1 grid-cols-2 gap-2.5">
             <button
               onClick={() => { setSheet('table2'); setSheetMode('classic'); sfx.click() }}
-              className="ls-tile-gold ls-shine ls-rise relative flex h-[min(36vw,20vh,148px)] flex-col overflow-hidden rounded-2xl p-1.5"
+              className="ls-tile-gold ls-shine ls-rise relative flex h-full min-h-[88px] flex-col overflow-hidden rounded-2xl p-1.5"
               style={{ '--d': '60ms' } as React.CSSProperties}
               aria-label="Play 2 player"
             >
               <div className="relative min-h-0 flex-1">
-                <div className="grid h-full place-items-center pb-0.5"><Pawn2x3D size={74} /></div>
+                <div className="grid h-full place-items-center pb-0.5"><Pawn2x3D size={82} /></div>
               </div>
               <div className="flex items-center justify-between gap-1 px-0.5 pb-0.5">
                 <span className="ls-font min-w-0 truncate text-left text-[15px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(150,80,0,0.7)' }}>{tr('twoPlayer')}</span>
@@ -507,12 +510,12 @@ export default function MenuScreen() {
 
             <button
               onClick={() => { setSheet('private'); sfx.click() }}
-              className="ls-tile-purple ls-shine ls-rise relative flex h-[min(36vw,20vh,148px)] flex-col overflow-hidden rounded-2xl p-1.5"
+              className="ls-tile-purple ls-shine ls-rise relative flex h-full min-h-[88px] flex-col overflow-hidden rounded-2xl p-1.5"
               style={{ '--d': '140ms' } as React.CSSProperties}
               aria-label="Open private table"
             >
               <div className="relative min-h-0 flex-1">
-                <div className="grid h-full place-items-center pb-0.5"><Crown3D size={66} /></div>
+                <div className="grid h-full place-items-center pb-0.5"><Crown3D size={74} /></div>
               </div>
               <div className="flex items-center justify-between gap-1 px-0.5 pb-0.5">
                 <span className="ls-font min-w-0 truncate text-left text-[13px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(40,10,90,0.7)' }}>{tr('privateTable')}</span>
@@ -522,15 +525,15 @@ export default function MenuScreen() {
           </div>
 
           {/* second row — 4 PLAYER (blue, same-to-same) + OFFLINE */}
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid min-h-0 flex-1 grid-cols-2 gap-2.5">
             <button
               onClick={() => { setSheet('table4'); setSheetMode('classic'); sfx.click() }}
-              className="ls-tile-blue ls-shine ls-rise relative flex h-[min(36vw,20vh,148px)] flex-col overflow-hidden rounded-2xl p-1.5"
+              className="ls-tile-blue ls-shine ls-rise relative flex h-full min-h-[88px] flex-col overflow-hidden rounded-2xl p-1.5"
               style={{ '--d': '220ms' } as React.CSSProperties}
               aria-label="Play 4 player"
             >
               <div className="relative min-h-0 flex-1">
-                <div className="grid h-full place-items-center pb-0.5"><Pawn4x3D size={70} /></div>
+                <div className="grid h-full place-items-center pb-0.5"><Pawn4x3D size={78} /></div>
               </div>
               <div className="flex items-center justify-between gap-1 px-0.5 pb-0.5">
                 <span className="ls-font min-w-0 truncate text-left text-[14px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(15,45,90,0.75)' }}>{tr('fourPlayer')}</span>
@@ -540,12 +543,12 @@ export default function MenuScreen() {
 
             <button
               onClick={() => { setSheet('offline'); setSheetMode('classic'); sfx.click() }}
-              className="ls-tile-green ls-shine ls-rise relative flex h-[min(36vw,20vh,148px)] flex-col overflow-hidden rounded-2xl p-1.5"
+              className="ls-tile-green ls-shine ls-rise relative flex h-full min-h-[88px] flex-col overflow-hidden rounded-2xl p-1.5"
               style={{ '--d': '300ms' } as React.CSSProperties}
               aria-label="Play offline — bots or pass and play"
             >
               <div className="relative min-h-0 flex-1">
-                <div className="grid h-full place-items-center pb-0.5"><Robot3D size={62} /></div>
+                <div className="grid h-full place-items-center pb-0.5"><Robot3D size={70} /></div>
               </div>
               <div className="flex items-center justify-between gap-1 px-0.5 pb-0.5">
                 <span className="ls-font min-w-0 truncate text-left text-[14px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(10,60,30,0.7)' }}>{tr('offline')}</span>
