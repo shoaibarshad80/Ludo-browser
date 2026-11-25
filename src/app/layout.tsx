@@ -32,9 +32,9 @@ export const metadata: Metadata = {
   title: "Ludo Royale — Premium Multiplayer Ludo",
   description: "Ludo Royale: premium multiplayer Ludo — play vs Computer, Pass & Play offline, or Online with bets, emotes and chat. Web now, mobile later.",
   keywords: ["Ludo", "Ludo Royale", "board game", "multiplayer", "dice game"],
-  icons: {
-    icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>",
-  },
+  // Real favicon files (src/app/favicon.ico + apple-icon.png, generated from
+  // the LudoBadge vector) — data-URI emoji favicons show blank on desktop.
+  // public/icon-512.png is available for PWA/og fallbacks.
   openGraph: {
     title: "Ludo Royale",
     description: "Premium Ludo with bets, emotes and online rooms",

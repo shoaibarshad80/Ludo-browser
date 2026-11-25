@@ -436,10 +436,11 @@ export default function MenuScreen() {
           {/* ============ HERO ZONE — same-to-same with Ludo Star: emblem + wordmark centered,
                gold crown on the board, dice & pawns flanking it. The four side icons sit at
                the outer edges ABOVE the play boxes, x-aligned with them. ============ */}
-          {/* HERO (5) vs TILES (6) share the free height proportionally:
-              tall phones -> big play boxes (no dead space), short windows ->
-              hero shrinks with the viewport so nothing ever overlaps. */}
-          <div className="relative z-10 flex min-h-0 flex-[5] flex-col items-center justify-center pt-5">
+          {/* HERO (4) vs TILES (7) share the free height proportionally:
+              tall phones -> big play boxes filling the former dead space,
+              short windows -> hero shrinks with the viewport so nothing
+              ever overlaps. */}
+          <div className="relative z-10 flex min-h-0 flex-[4] flex-col items-center justify-center pt-5">
             {/* side icon rails — above the boxes, aligned with their outer edges */}
             <div className="absolute left-0 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-2.5">
               <SideRailButton label={tr('dailyReward')} tone="gold" badge={dailyClaimable ? 1 : 0} onClick={() => setTab('chest')}>
@@ -479,8 +480,8 @@ export default function MenuScreen() {
                 <div className="absolute -top-[20px] left-1/2 z-20 -translate-x-1/2">
                   <Crown3D size={44} />
                 </div>
-                <div className="aspect-square h-[min(13vh,96px)]">
-                  <LudoBadge size={96} className="h-full w-full" />
+                <div className="aspect-square h-[min(14vh,100px)]">
+                  <LudoBadge size={100} className="h-full w-full" />
                 </div>
               </div>
               <h1 className="ls-font ls-hero-word mt-1.5">LUDO</h1>
@@ -489,7 +490,7 @@ export default function MenuScreen() {
           </div>
 
           {/* ============ PLAY BOXES — 2x2, equal heights, full width (same-to-same) ============ */}
-          <div className="relative z-10 mb-2 flex min-h-0 flex-[6] flex-col gap-2.5">
+          <div className="relative z-10 mb-4 flex min-h-0 flex-[7] flex-col gap-2.5">
 
           {/* first row — 2 PLAYER + PRIVATE TABLE */}
           <div className="grid min-h-0 flex-1 grid-cols-2 gap-2.5">
@@ -500,7 +501,7 @@ export default function MenuScreen() {
               aria-label="Play 2 player"
             >
               <div className="relative min-h-0 flex-1">
-                <div className="grid h-full place-items-center pb-0.5"><Pawn2x3D size={82} /></div>
+                <div className="grid h-full place-items-center pb-0.5"><Pawn2x3D size={92} /></div>
               </div>
               <div className="flex items-center justify-between gap-1 px-0.5 pb-0.5">
                 <span className="ls-font min-w-0 truncate text-left text-[15px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(150,80,0,0.7)' }}>{tr('twoPlayer')}</span>
@@ -515,7 +516,7 @@ export default function MenuScreen() {
               aria-label="Open private table"
             >
               <div className="relative min-h-0 flex-1">
-                <div className="grid h-full place-items-center pb-0.5"><Crown3D size={74} /></div>
+                <div className="grid h-full place-items-center pb-0.5"><Crown3D size={84} /></div>
               </div>
               <div className="flex items-center justify-between gap-1 px-0.5 pb-0.5">
                 <span className="ls-font min-w-0 truncate text-left text-[13px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(40,10,90,0.7)' }}>{tr('privateTable')}</span>
@@ -533,7 +534,7 @@ export default function MenuScreen() {
               aria-label="Play 4 player"
             >
               <div className="relative min-h-0 flex-1">
-                <div className="grid h-full place-items-center pb-0.5"><Pawn4x3D size={78} /></div>
+                <div className="grid h-full place-items-center pb-0.5"><Pawn4x3D size={88} /></div>
               </div>
               <div className="flex items-center justify-between gap-1 px-0.5 pb-0.5">
                 <span className="ls-font min-w-0 truncate text-left text-[14px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(15,45,90,0.75)' }}>{tr('fourPlayer')}</span>
@@ -548,7 +549,7 @@ export default function MenuScreen() {
               aria-label="Play offline — bots or pass and play"
             >
               <div className="relative min-h-0 flex-1">
-                <div className="grid h-full place-items-center pb-0.5"><Robot3D size={70} /></div>
+                <div className="grid h-full place-items-center pb-0.5"><Robot3D size={80} /></div>
               </div>
               <div className="flex items-center justify-between gap-1 px-0.5 pb-0.5">
                 <span className="ls-font min-w-0 truncate text-left text-[14px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(10,60,30,0.7)' }}>{tr('offline')}</span>
