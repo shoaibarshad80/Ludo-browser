@@ -9,6 +9,7 @@ import { useLudo } from '@/stores/ludoStore'
 import MenuScreen from '@/components/ludo/MenuScreen'
 import WaitingRoom from '@/components/ludo/WaitingRoom'
 import GameScreen from '@/components/ludo/GameScreen'
+import ErrorBoundary from '@/components/ludo/ErrorBoundary'
 
 const VIEWS: Record<string, React.ComponentType> = {
   menu: MenuScreen,
@@ -24,8 +25,24 @@ export default function LudoApp() {
   const hydrate = useLudo((s) => s.hydrate)
 
   useEffect(() => {
-    hydrate()
+    // hydrate defensively: if storage parsing ever throws, still open the lobby
+    try {
+      hydrate()
+    } catch {
+      useLudo.setState({ hydrated: true })
+    }
     ;(window as unknown as { __LUDO__: typeof useLudo }).__LUDO__ = useLudo
+    // tell the inline boot watchdog (layout.tsx) that the app came up
+    const w = window as unknown as {
+      __LUDO_BOOTED?: boolean
+      __LUDO_BOOT_WATCH__?: ReturnType<typeof setTimeout>
+    }
+    w.__LUDO_BOOTED = true
+    if (w.__LUDO_BOOT_WATCH__) {
+      clearTimeout(w.__LUDO_BOOT_WATCH__)
+      w.__LUDO_BOOT_WATCH__ = undefined
+    }
+    document.getElementById('ludo-slow-banner')?.remove()
   }, [hydrate])
 
   const Active = VIEWS[view] ?? MenuScreen
@@ -53,7 +70,9 @@ export default function LudoApp() {
           transition={{ duration: 0.22, ease: 'easeOut' }}
           className="h-full"
         >
-          <Active />
+          <ErrorBoundary>
+            <Active />
+          </ErrorBoundary>
         </motion.div>
       </AnimatePresence>
     </main>

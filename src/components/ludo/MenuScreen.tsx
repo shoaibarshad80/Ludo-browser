@@ -28,6 +28,7 @@ import {
   DecoDie, DecoToken, ChestArt,
 } from '@/components/ludo/icons'
 import { LnShop, LnFriends, LnHome, LnProfile, LnChest } from '@/components/ludo/line-icons'
+import BootScreen from '@/components/ludo/BootScreen'
 import { Art2P, Art4P, ArtPrivate, ArtOffline } from '@/components/ludo/MenuArt'
 import {
   Coin3D, Gem3D, Pawn2x3D, Pawn4x3D, Robot3D, Crown3D,
@@ -291,14 +292,7 @@ export default function MenuScreen() {
   const seats: 2 | 4 = sheet === 'table2' ? 2 : 4
 
   if (!hydrated) {
-    return (
-      <div className="ls-bg-lobby fixed inset-0 grid place-items-center">
-        <div className="flex flex-col items-center gap-3">
-          <LudoLogo />
-          <Loader2 className="h-6 w-6 animate-spin text-fuchsia-200" />
-        </div>
-      </div>
-    )
+    return <BootScreen />
   }
 
   return (
