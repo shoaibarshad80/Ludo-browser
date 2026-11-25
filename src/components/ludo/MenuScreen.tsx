@@ -433,31 +433,12 @@ export default function MenuScreen() {
 
         {/* ============ MAIN (LUDO hero + play tiles) ============ */}
         <main className="relative flex min-h-0 flex-1 flex-col px-3">
-          {/* ============ HERO ZONE — same-to-same with Ludo Star: emblem + wordmark centered,
-               gold crown on the board, dice & pawns flanking it. The four side icons sit at
-               the outer edges ABOVE the play boxes, x-aligned with them. ============ */}
-          {/* HERO flex-1: emblem floats centered in the middle space — tiles below are
-              fixed landscape (wider than tall), so the leftover height lives in the middle
-              exactly like the Ludo Star lobby; short windows shrink hero via vh caps. */}
-          <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center pt-4">
-            {/* side icon rails — pulled down to sit directly ABOVE the play boxes
-                (no more floating mid-hero with empty space around them) */}
-            <div className="absolute bottom-0 left-0 z-20 flex flex-col gap-2.5">
-              <SideRailButton label={tr('dailyReward')} tone="gold" badge={dailyClaimable ? 1 : 0} onClick={() => setTab('chest')}>
-                <Gift size={20} />
-              </SideRailButton>
-              <SideRailButton label={tr('winStars')} tone="purple" onClick={() => setSheet('ranks')}>
-                <Trophy size={20} />
-              </SideRailButton>
-            </div>
-            <div className="absolute bottom-0 right-0 z-20 flex flex-col gap-2.5">
-              <SideRailButton label={tr('friends')} tone="green" dot={onlineFriends > 0 ? '#4ade80' : undefined} onClick={() => setTab('friends')}>
-                <Users size={20} />
-              </SideRailButton>
-              <SideRailButton label={tr('shop')} tone="blue" onClick={() => setTab('shop')}>
-                <ShoppingBag size={20} />
-              </SideRailButton>
-            </div>
+          {/* ============ HERO ZONE — emblem + wordmark centered at the top area,
+               gold crown on the board, dice & pawns flanking it. The four side icons
+               flank the PLAY BOXES below (classic Ludo Star lobby). ============ */}
+          {/* HERO (5) vs MIDDLE (6): boxes sit centered in the middle zone with the
+              icon rails beside them; vh caps keep short windows safe. */}
+          <div className="relative z-10 flex min-h-0 flex-[5] flex-col items-center justify-center pt-4">
 
             {/* dice & pawns flanking the emblem (composited transform-only float) */}
             <div className="ls-float-a pointer-events-none absolute left-3 top-[6%] z-0" aria-hidden>
@@ -489,13 +470,27 @@ export default function MenuScreen() {
             </div>
           </div>
 
-          {/* ============ PLAY BOXES — 2x2 landscape tiles (WIDER than tall):
-              fixed height min(34vw,19vh,142px) keeps each box wide-format on every
-              phone; mb-7 gives a clear breathing gap above the bottom nav. ============ */}
-          <div className="relative z-10 mb-7 flex flex-col gap-2.5">
+          {/* ============ MIDDLE — play boxes centered, icon rails flanking LEFT/RIGHT
+              (classic Ludo Star lobby): boxes sit in the vertical middle, rails keep
+              their sides. Boxes stay wide-format via min(30vw,17vh,124px) rows.
+              mb-7 keeps the clear breathing gap above the bottom nav. ============ */}
+          <div className="relative z-10 mb-7 flex min-h-0 flex-[6] items-center gap-2">
+
+            {/* left rail — same side as always */}
+            <div className="flex shrink-0 flex-col gap-2.5">
+              <SideRailButton label={tr('dailyReward')} tone="gold" badge={dailyClaimable ? 1 : 0} onClick={() => setTab('chest')}>
+                <Gift size={20} />
+              </SideRailButton>
+              <SideRailButton label={tr('winStars')} tone="purple" onClick={() => setSheet('ranks')}>
+                <Trophy size={20} />
+              </SideRailButton>
+            </div>
+
+            {/* play boxes (2x2, centered) */}
+            <div className="flex min-w-0 flex-1 flex-col gap-2.5">
 
           {/* first row — 2 PLAYER + PRIVATE TABLE */}
-          <div className="grid h-[min(34vw,19vh,142px)] grid-cols-2 gap-2.5">
+          <div className="grid h-[min(30vw,17vh,124px)] grid-cols-2 gap-2.5">
             <button
               onClick={() => { setSheet('table2'); setSheetMode('classic'); sfx.click() }}
               className="ls-tile-gold ls-shine ls-rise relative flex h-full min-h-[88px] flex-col overflow-hidden rounded-2xl p-1.5"
@@ -503,7 +498,7 @@ export default function MenuScreen() {
               aria-label="Play 2 player"
             >
               <div className="relative min-h-0 flex-1">
-                <div className="grid h-full place-items-center pb-0.5"><Pawn2x3D size={86} className="max-h-full max-w-full" /></div>
+                <div className="grid h-full place-items-center pb-0.5"><Pawn2x3D size={80} className="max-h-full max-w-full" /></div>
               </div>
               <div className="flex items-center justify-between gap-1 px-0.5 pb-0.5">
                 <span className="ls-font min-w-0 truncate text-left text-[15px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(150,80,0,0.7)' }}>{tr('twoPlayer')}</span>
@@ -518,7 +513,7 @@ export default function MenuScreen() {
               aria-label="Open private table"
             >
               <div className="relative min-h-0 flex-1">
-                <div className="grid h-full place-items-center pb-0.5"><Crown3D size={78} className="max-h-full max-w-full" /></div>
+                <div className="grid h-full place-items-center pb-0.5"><Crown3D size={72} className="max-h-full max-w-full" /></div>
               </div>
               <div className="flex items-center justify-between gap-1 px-0.5 pb-0.5">
                 <span className="ls-font min-w-0 truncate text-left text-[13px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(40,10,90,0.7)' }}>{tr('privateTable')}</span>
@@ -528,7 +523,7 @@ export default function MenuScreen() {
           </div>
 
           {/* second row — 4 PLAYER (blue, same-to-same) + OFFLINE */}
-          <div className="grid h-[min(34vw,19vh,142px)] grid-cols-2 gap-2.5">
+          <div className="grid h-[min(30vw,17vh,124px)] grid-cols-2 gap-2.5">
             <button
               onClick={() => { setSheet('table4'); setSheetMode('classic'); sfx.click() }}
               className="ls-tile-blue ls-shine ls-rise relative flex h-full min-h-[88px] flex-col overflow-hidden rounded-2xl p-1.5"
@@ -536,7 +531,7 @@ export default function MenuScreen() {
               aria-label="Play 4 player"
             >
               <div className="relative min-h-0 flex-1">
-                <div className="grid h-full place-items-center pb-0.5"><Pawn4x3D size={82} className="max-h-full max-w-full" /></div>
+                <div className="grid h-full place-items-center pb-0.5"><Pawn4x3D size={76} className="max-h-full max-w-full" /></div>
               </div>
               <div className="flex items-center justify-between gap-1 px-0.5 pb-0.5">
                 <span className="ls-font min-w-0 truncate text-left text-[14px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(15,45,90,0.75)' }}>{tr('fourPlayer')}</span>
@@ -551,7 +546,7 @@ export default function MenuScreen() {
               aria-label="Play offline — bots or pass and play"
             >
               <div className="relative min-h-0 flex-1">
-                <div className="grid h-full place-items-center pb-0.5"><Robot3D size={74} className="max-h-full max-w-full" /></div>
+                <div className="grid h-full place-items-center pb-0.5"><Robot3D size={68} className="max-h-full max-w-full" /></div>
               </div>
               <div className="flex items-center justify-between gap-1 px-0.5 pb-0.5">
                 <span className="ls-font min-w-0 truncate text-left text-[14px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(10,60,30,0.7)' }}>{tr('offline')}</span>
@@ -559,6 +554,17 @@ export default function MenuScreen() {
               </div>
             </button>
           </div>
+            </div>
+
+            {/* right rail — same side as always */}
+            <div className="flex shrink-0 flex-col gap-2.5">
+              <SideRailButton label={tr('friends')} tone="green" dot={onlineFriends > 0 ? '#4ade80' : undefined} onClick={() => setTab('friends')}>
+                <Users size={20} />
+              </SideRailButton>
+              <SideRailButton label={tr('shop')} tone="blue" onClick={() => setTab('shop')}>
+                <ShoppingBag size={20} />
+              </SideRailButton>
+            </div>
           </div>
         </main>
 
