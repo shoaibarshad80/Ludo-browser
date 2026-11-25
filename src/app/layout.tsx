@@ -57,7 +57,7 @@ export default function RootLayout({
         <script
           id="ludo-boot-watchdog"
           dangerouslySetInnerHTML={{
-            __html: `(function(){setTimeout(function(){if(window.__LUDO_BOOTED)return;var b=document.createElement('div');b.id='ludo-slow-banner';b.setAttribute('onclick','location.reload()');b.style.cssText='position:fixed;left:12px;right:12px;bottom:18px;z-index:99999;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-radius:16px;background:rgba(10,13,34,.94);color:#fff;font-family:system-ui,-apple-system,sans-serif;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.5);cursor:pointer';b.innerHTML='<span>Slow connection — taking too long?</span><b style="color:#ffc94d">RELOAD</b>';document.body.appendChild(b)},10000})();`,
+            __html: `(function(){setTimeout(function(){if(window.__LUDO_BOOTED)return;var b=document.createElement('div');b.id='ludo-slow-banner';b.setAttribute('onclick','location.reload()');b.style.cssText='position:fixed;left:12px;right:12px;bottom:18px;z-index:99999;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-radius:16px;background:rgba(10,13,34,.94);color:#fff;font-family:system-ui,-apple-system,sans-serif;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.5);cursor:pointer';b.innerHTML='<span>Slow connection — taking too long?</span><b style="color:#ffc94d">RELOAD</b>';document.body.appendChild(b)},10000)})();`,
           }}
         />
         {children}
