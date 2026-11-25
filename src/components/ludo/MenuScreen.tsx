@@ -64,12 +64,12 @@ function CurrencyChip({
     <motion.button
       whileTap={onClick ? { scale: 0.94 } : undefined}
       onClick={onClick}
-      className="ls-lobby-chip flex items-center gap-1 rounded-full py-[3px] pl-1.5 pr-1"
+      className="ls-lobby-chip flex items-center gap-1 rounded-full py-[5px] pl-2 pr-1.5"
       aria-label={label}
       title={label}
     >
       {icon}
-      <span className={`ls-font text-[11px] leading-none ${valueClass ?? 'text-amber-100'}`}>{value}</span>
+      <span className={`ls-font text-[12px] leading-none ${valueClass ?? 'text-amber-100'}`}>{value}</span>
       {onClick && (
         <span
           className="grid h-4 w-4 place-items-center rounded-full text-[11px] font-black leading-none text-white"
@@ -306,19 +306,19 @@ export default function MenuScreen() {
         <div className="flex items-center gap-1.5 px-2.5 pt-2.5">
           <CurrencyChip
             value={`${Math.min(profile.wins, 50)}/50`}
-            icon={<IconStarGold size={16} />}
+            icon={<IconStarGold size={18} />}
             onClick={() => setSheet('ranks')}
             label={`${tr('winStars')} ${profile.wins}/50 — ${tr('tapForLeaderboard')}`}
           />
           <CurrencyChip
             value={profile.coins.toLocaleString()}
-            icon={<Coin3D size={24} />}
+            icon={<Coin3D size={28} />}
             onClick={refillCoins}
             label={`${tr('coins')} ${profile.coins.toLocaleString()} — ${tr('tapForRefill')}`}
           />
           <CurrencyChip
             value={profile.gems.toLocaleString()}
-            icon={<Gem3D size={22} />}
+            icon={<Gem3D size={26} />}
             onClick={() => setTab('shop')}
             label={`${tr('gems')} ${profile.gems} — ${tr('tapForShop')}`}
             valueClass="text-teal-100"
@@ -329,10 +329,10 @@ export default function MenuScreen() {
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => { setSettingsOpen((o) => !o); sfx.click() }}
-                className="ls-lobby-chip grid h-9 w-9 place-items-center rounded-full text-fuchsia-100"
+                className="ls-lobby-chip grid h-10 w-10 place-items-center rounded-full text-fuchsia-100"
                 aria-label={tr('settings')}
               >
-                <Settings size={20} />
+                <Settings size={22} />
               </motion.button>
               <AnimatePresence>
                 {settingsOpen && (
@@ -391,16 +391,16 @@ export default function MenuScreen() {
         {/* ============ PLAYER ROW (avatar + level) ============ */}
         <div className="flex items-center gap-2.5 px-2.5 pt-2">
           <button onClick={() => { setTab('profile'); sfx.click() }} className="relative shrink-0" aria-label={tr('profile')}>
-            <AvatarRing avatar={profile.avatar} size={46} />
+            <AvatarRing avatar={profile.avatar} size={54} />
             <span
-              className="ls-font absolute -bottom-1 -right-1.5 grid h-[22px] min-w-[22px] place-items-center rounded-full px-1 text-[10px] text-white"
+              className="ls-font absolute -bottom-1 -right-1.5 grid h-6 min-w-6 place-items-center rounded-full px-1 text-[11px] text-white"
               style={{ background: 'linear-gradient(180deg,#ff9d3c,#e8720c)', boxShadow: '0 2px 5px rgba(0,0,0,0.45), 0 0 0 2.5px rgba(90,15,80,0.9)' }}
             >
               {lvl.level}
             </span>
           </button>
           <div className="min-w-0">
-            <p className="ls-font truncate text-sm leading-tight text-white">{profile.name}</p>
+            <p className="ls-font truncate text-[15px] leading-tight text-white">{profile.name}</p>
             <span
               className="ls-font mt-1 inline-flex items-center gap-1 rounded-md px-1.5 py-[2px] text-[9px] leading-none text-white"
               style={{ background: 'linear-gradient(180deg,#ff9d3c,#e8720c)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4)' }}
@@ -408,7 +408,7 @@ export default function MenuScreen() {
               <Flag size={9} fill="#fff" /> {tr('level')} {lvl.level}
             </span>
             <div
-              className="mt-1.5 h-[5px] w-[112px] overflow-hidden rounded-full"
+              className="mt-1.5 h-[6px] w-[126px] overflow-hidden rounded-full"
               style={{ background: 'rgba(255,255,255,0.14)', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.35)' }}
               title={`XP ${lvl.xpNow}/${lvl.xpNeed} to level ${lvl.level + 1}`}
             >
@@ -436,11 +436,10 @@ export default function MenuScreen() {
           {/* ============ HERO ZONE — same-to-same with Ludo Star: emblem + wordmark centered,
                gold crown on the board, dice & pawns flanking it. The four side icons sit at
                the outer edges ABOVE the play boxes, x-aligned with them. ============ */}
-          {/* HERO (4) vs TILES (7) share the free height proportionally:
-              tall phones -> big play boxes filling the former dead space,
-              short windows -> hero shrinks with the viewport so nothing
-              ever overlaps. */}
-          <div className="relative z-10 flex min-h-0 flex-[4] flex-col items-center justify-center pt-5">
+          {/* HERO flex-1: emblem floats centered in the middle space — tiles below are
+              fixed landscape (wider than tall), so the leftover height lives in the middle
+              exactly like the Ludo Star lobby; short windows shrink hero via vh caps. */}
+          <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center pt-5">
             {/* side icon rails — above the boxes, aligned with their outer edges */}
             <div className="absolute left-0 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-2.5">
               <SideRailButton label={tr('dailyReward')} tone="gold" badge={dailyClaimable ? 1 : 0} onClick={() => setTab('chest')}>
@@ -480,8 +479,8 @@ export default function MenuScreen() {
                 <div className="absolute -top-[20px] left-1/2 z-20 -translate-x-1/2">
                   <Crown3D size={44} />
                 </div>
-                <div className="aspect-square h-[min(14vh,100px)]">
-                  <LudoBadge size={100} className="h-full w-full" />
+                <div className="aspect-square h-[min(14vh,104px)]">
+                  <LudoBadge size={104} className="h-full w-full" />
                 </div>
               </div>
               <h1 className="ls-font ls-hero-word mt-1.5">LUDO</h1>
@@ -489,11 +488,13 @@ export default function MenuScreen() {
             </div>
           </div>
 
-          {/* ============ PLAY BOXES — 2x2, equal heights, full width (same-to-same) ============ */}
-          <div className="relative z-10 mb-4 flex min-h-0 flex-[7] flex-col gap-2.5">
+          {/* ============ PLAY BOXES — 2x2 landscape tiles (WIDER than tall):
+              fixed height min(34vw,19vh,142px) keeps each box wide-format on every
+              phone; mb-5 gives a clear gap above the bottom nav. ============ */}
+          <div className="relative z-10 mb-5 flex flex-col gap-2.5">
 
           {/* first row — 2 PLAYER + PRIVATE TABLE */}
-          <div className="grid min-h-0 flex-1 grid-cols-2 gap-2.5">
+          <div className="grid h-[min(34vw,19vh,142px)] grid-cols-2 gap-2.5">
             <button
               onClick={() => { setSheet('table2'); setSheetMode('classic'); sfx.click() }}
               className="ls-tile-gold ls-shine ls-rise relative flex h-full min-h-[88px] flex-col overflow-hidden rounded-2xl p-1.5"
@@ -501,7 +502,7 @@ export default function MenuScreen() {
               aria-label="Play 2 player"
             >
               <div className="relative min-h-0 flex-1">
-                <div className="grid h-full place-items-center pb-0.5"><Pawn2x3D size={92} /></div>
+                <div className="grid h-full place-items-center pb-0.5"><Pawn2x3D size={86} className="max-h-full max-w-full" /></div>
               </div>
               <div className="flex items-center justify-between gap-1 px-0.5 pb-0.5">
                 <span className="ls-font min-w-0 truncate text-left text-[15px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(150,80,0,0.7)' }}>{tr('twoPlayer')}</span>
@@ -516,7 +517,7 @@ export default function MenuScreen() {
               aria-label="Open private table"
             >
               <div className="relative min-h-0 flex-1">
-                <div className="grid h-full place-items-center pb-0.5"><Crown3D size={84} /></div>
+                <div className="grid h-full place-items-center pb-0.5"><Crown3D size={78} className="max-h-full max-w-full" /></div>
               </div>
               <div className="flex items-center justify-between gap-1 px-0.5 pb-0.5">
                 <span className="ls-font min-w-0 truncate text-left text-[13px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(40,10,90,0.7)' }}>{tr('privateTable')}</span>
@@ -526,7 +527,7 @@ export default function MenuScreen() {
           </div>
 
           {/* second row — 4 PLAYER (blue, same-to-same) + OFFLINE */}
-          <div className="grid min-h-0 flex-1 grid-cols-2 gap-2.5">
+          <div className="grid h-[min(34vw,19vh,142px)] grid-cols-2 gap-2.5">
             <button
               onClick={() => { setSheet('table4'); setSheetMode('classic'); sfx.click() }}
               className="ls-tile-blue ls-shine ls-rise relative flex h-full min-h-[88px] flex-col overflow-hidden rounded-2xl p-1.5"
@@ -534,7 +535,7 @@ export default function MenuScreen() {
               aria-label="Play 4 player"
             >
               <div className="relative min-h-0 flex-1">
-                <div className="grid h-full place-items-center pb-0.5"><Pawn4x3D size={88} /></div>
+                <div className="grid h-full place-items-center pb-0.5"><Pawn4x3D size={82} className="max-h-full max-w-full" /></div>
               </div>
               <div className="flex items-center justify-between gap-1 px-0.5 pb-0.5">
                 <span className="ls-font min-w-0 truncate text-left text-[14px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(15,45,90,0.75)' }}>{tr('fourPlayer')}</span>
@@ -549,7 +550,7 @@ export default function MenuScreen() {
               aria-label="Play offline — bots or pass and play"
             >
               <div className="relative min-h-0 flex-1">
-                <div className="grid h-full place-items-center pb-0.5"><Robot3D size={80} /></div>
+                <div className="grid h-full place-items-center pb-0.5"><Robot3D size={74} className="max-h-full max-w-full" /></div>
               </div>
               <div className="flex items-center justify-between gap-1 px-0.5 pb-0.5">
                 <span className="ls-font min-w-0 truncate text-left text-[14px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(10,60,30,0.7)' }}>{tr('offline')}</span>

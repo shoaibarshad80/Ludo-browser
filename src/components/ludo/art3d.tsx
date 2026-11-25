@@ -49,10 +49,10 @@ export const Gem3D = ({ size = 24 }: { size?: number }) => <Art3D name="gem" siz
 export const Chest3D = ({ size = 30 }: { size?: number }) => <Art3D name="chest" size={size} />
 export const Trophy3D = ({ size = 30 }: { size?: number }) => <Art3D name="trophy" size={size} />
 export const Dice3D = ({ size = 34 }: { size?: number }) => <Art3D name="dice" size={size} />
-export const Pawn2x3D = ({ size = 64 }: { size?: number }) => <Art3D name="pawn2" size={size} />
-export const Pawn4x3D = ({ size = 64 }: { size?: number }) => <Art3D name="pawn4" size={size} />
-export const Robot3D = ({ size = 64 }: { size?: number }) => <Art3D name="robot" size={size} />
-export const Crown3D = ({ size = 40 }: { size?: number }) => <Art3D name="crown" size={size} />
+export const Pawn2x3D = ({ size = 64, className }: { size?: number; className?: string }) => <Art3D name="pawn2" size={size} className={className} />
+export const Pawn4x3D = ({ size = 64, className }: { size?: number; className?: string }) => <Art3D name="pawn4" size={size} className={className} />
+export const Robot3D = ({ size = 64, className }: { size?: number; className?: string }) => <Art3D name="robot" size={size} className={className} />
+export const Crown3D = ({ size = 40, className }: { size?: number; className?: string }) => <Art3D name="crown" size={size} className={className} />
 /** Hero ludo-board emblem for the lobby (no per-pixel drop shadow — CSS halo instead). */
 export const Logo3D = ({ size = 120, className }: { size?: number; className?: string }) => (
   <Art3D name="logo" size={size} shadow={false} className={className} />
