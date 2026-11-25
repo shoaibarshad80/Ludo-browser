@@ -25,7 +25,7 @@ import {
 } from 'lucide-react'
 import {
   IconStarGold, LudoBadge,
-  DecoDie, DecoToken, ChestArt,
+  DecoDie, DecoToken,
 } from '@/components/ludo/icons'
 import { LnShop, LnFriends, LnHome, LnProfile, LnChest } from '@/components/ludo/line-icons'
 import BootScreen from '@/components/ludo/BootScreen'
@@ -34,7 +34,7 @@ import {
   Coin3D, Gem3D, Pawn2x3D, Pawn4x3D, Robot3D, Crown3D,
 } from '@/components/ludo/art3d'
 import HistoryGraph from '@/components/ludo/HistoryGraph'
-import { useLudo, DAILY_REWARDS } from '@/stores/ludoStore'
+import { useLudo } from '@/stores/ludoStore'
 import { AVATARS, FREE_REFILL, STAKES } from '@/lib/ludo/constants'
 import { ACHIEVEMENTS, BOT_FRIENDS, LEADERBOARD_SEED, levelFromWins, rankTitle } from '@/lib/ludo/social'
 import { LANGS, t, type Lang } from '@/lib/ludo/i18n'
@@ -86,13 +86,13 @@ function PlayChip() {
   return (
     <span
       aria-hidden
-      className="absolute bottom-0.5 right-0.5 grid h-7 w-7 place-items-center rounded-full"
+      className="grid h-8 w-8 shrink-0 place-items-center rounded-full"
       style={{
         background: 'linear-gradient(180deg,#ffe08a,#f0a10c)',
         boxShadow: '0 2px 6px rgba(60,25,0,0.55), inset 0 1px 0 rgba(255,255,255,0.65)',
       }}
     >
-      <Play size={13} fill="#fff" className="translate-x-[1px] text-white" />
+      <Play size={15} fill="#fff" className="translate-x-[1px] text-white" />
     </span>
   )
 }
@@ -433,35 +433,60 @@ export default function MenuScreen() {
 
         {/* ============ MAIN (LUDO hero + play tiles) ============ */}
         <main className="relative flex min-h-0 flex-1 flex-col px-3">
-          {/* LUDO hero — compact emblem + wordmark pinned above the centered play tiles */}
-          <div className="pointer-events-none relative z-10 flex shrink-0 flex-col items-center pt-1">
-            <div className="ls-hero-float relative">
-              <span aria-hidden className="ls-hero-halo absolute -inset-4 rounded-[34%]" />
-              <div className="aspect-square h-[min(20vh,92px)]">
-                <LudoBadge size={92} className="h-full w-full" />
-              </div>
+          {/* ============ HERO ZONE — same-to-same with Ludo Star: emblem + wordmark centered,
+               gold crown on the board, dice & pawns flanking it. The four side icons sit at
+               the outer edges ABOVE the play boxes, x-aligned with them. ============ */}
+          <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center">
+            {/* side icon rails — above the boxes, aligned with their outer edges */}
+            <div className="absolute left-0 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-2.5">
+              <SideRailButton label={tr('dailyReward')} tone="gold" badge={dailyClaimable ? 1 : 0} onClick={() => setTab('chest')}>
+                <Gift size={20} />
+              </SideRailButton>
+              <SideRailButton label={tr('winStars')} tone="purple" onClick={() => setSheet('ranks')}>
+                <Trophy size={20} />
+              </SideRailButton>
             </div>
-            <h1 className="ls-font ls-hero-word mt-1.5">LUDO</h1>
-            <p className="ls-font ls-hero-star">STAR</p>
+            <div className="absolute right-0 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-2.5">
+              <SideRailButton label={tr('friends')} tone="green" dot={onlineFriends > 0 ? '#4ade80' : undefined} onClick={() => setTab('friends')}>
+                <Users size={20} />
+              </SideRailButton>
+              <SideRailButton label={tr('shop')} tone="blue" onClick={() => setTab('shop')}>
+                <ShoppingBag size={20} />
+              </SideRailButton>
+            </div>
+
+            {/* dice & pawns flanking the emblem (composited transform-only float) */}
+            <div className="ls-float-a pointer-events-none absolute left-3 top-[6%] z-0" aria-hidden>
+              <DecoDie value={5} size={28} tilt={14} />
+            </div>
+            <div className="ls-float-b pointer-events-none absolute right-4 top-[10%] z-0" aria-hidden>
+              <DecoDie value={3} size={22} tilt={-12} />
+            </div>
+            <div className="pointer-events-none absolute bottom-[10%] left-6 z-0" aria-hidden>
+              <DecoToken color="red" size={20} />
+            </div>
+            <div className="ls-float-b pointer-events-none absolute bottom-[4%] right-8 z-0" aria-hidden>
+              <DecoToken color="blue" size={18} />
+            </div>
+
+            {/* emblem + wordmark */}
+            <div className="pointer-events-none relative z-10 flex flex-col items-center">
+              <div className="ls-hero-float relative">
+                <span aria-hidden className="ls-hero-halo absolute -inset-4 rounded-[34%]" />
+                <div className="absolute -top-[24px] left-1/2 z-20 -translate-x-1/2">
+                  <Crown3D size={48} />
+                </div>
+                <div className="aspect-square h-[min(22vh,108px)]">
+                  <LudoBadge size={108} className="h-full w-full" />
+                </div>
+              </div>
+              <h1 className="ls-font ls-hero-word mt-1.5">LUDO</h1>
+              <p className="ls-font ls-hero-star">STAR</p>
+            </div>
           </div>
 
-          {/* ============ MIDDLE — side rail icons flank the play tiles; the tile block is
-               vertically centered so the space above and below it is always equal ============ */}
-          <div className="relative z-10 flex min-h-0 flex-1 items-center">
-            <div className="flex w-full items-center gap-2">
-
-              {/* left rail — daily reward + win stars */}
-              <div className="flex shrink-0 flex-col gap-2.5">
-                <SideRailButton label={tr('dailyReward')} tone="gold" badge={dailyClaimable ? 1 : 0} onClick={() => setTab('chest')}>
-                  <Gift size={20} />
-                </SideRailButton>
-                <SideRailButton label={tr('winStars')} tone="purple" onClick={() => setSheet('ranks')}>
-                  <Trophy size={20} />
-                </SideRailButton>
-              </div>
-
-              {/* play tiles — centered column */}
-              <div className="flex min-w-0 flex-1 flex-col gap-2.5">
+          {/* ============ PLAY BOXES — 2x2, equal heights, full width (same-to-same) ============ */}
+          <div className="relative z-10 mb-2 flex shrink-0 flex-col gap-2.5">
 
           {/* first row — 2 PLAYER + PRIVATE TABLE */}
           <div className="grid grid-cols-2 gap-2.5">
@@ -472,10 +497,12 @@ export default function MenuScreen() {
               aria-label="Play 2 player"
             >
               <div className="relative min-h-0 flex-1">
-                <div className="grid h-full place-items-center pb-0.5"><Pawn2x3D size={70} /></div>
+                <div className="grid h-full place-items-center pb-0.5"><Pawn2x3D size={74} /></div>
+              </div>
+              <div className="flex items-center justify-between gap-1 px-0.5 pb-0.5">
+                <span className="ls-font min-w-0 truncate text-left text-[15px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(150,80,0,0.7)' }}>{tr('twoPlayer')}</span>
                 <PlayChip />
               </div>
-              <span className="ls-font pb-1 text-center text-[15px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(150,80,0,0.7)' }}>{tr('twoPlayer')}</span>
             </button>
 
             <button
@@ -485,111 +512,47 @@ export default function MenuScreen() {
               aria-label="Open private table"
             >
               <div className="relative min-h-0 flex-1">
-                <div className="grid h-full place-items-center pb-0.5"><Crown3D size={62} /></div>
+                <div className="grid h-full place-items-center pb-0.5"><Crown3D size={66} /></div>
+              </div>
+              <div className="flex items-center justify-between gap-1 px-0.5 pb-0.5">
+                <span className="ls-font min-w-0 truncate text-left text-[13px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(40,10,90,0.7)' }}>{tr('privateTable')}</span>
                 <PlayChip />
               </div>
-              <span className="ls-font pb-1 text-center text-[13px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(40,10,90,0.7)' }}>{tr('privateTable')}</span>
             </button>
           </div>
 
-          {/* second row — 4 PLAYER + OFFLINE */}
+          {/* second row — 4 PLAYER (blue, same-to-same) + OFFLINE */}
           <div className="grid grid-cols-2 gap-2.5">
             <button
               onClick={() => { setSheet('table4'); setSheetMode('classic'); sfx.click() }}
-              className="ls-tile-purple ls-shine ls-rise relative flex h-[min(30vw,16vh,124px)] flex-col overflow-hidden rounded-2xl p-1.5"
+              className="ls-tile-blue ls-shine ls-rise relative flex h-[min(36vw,20vh,148px)] flex-col overflow-hidden rounded-2xl p-1.5"
               style={{ '--d': '220ms' } as React.CSSProperties}
               aria-label="Play 4 player"
             >
               <div className="relative min-h-0 flex-1">
-                <div className="grid h-full place-items-center pb-0.5"><Pawn4x3D size={62} /></div>
+                <div className="grid h-full place-items-center pb-0.5"><Pawn4x3D size={70} /></div>
+              </div>
+              <div className="flex items-center justify-between gap-1 px-0.5 pb-0.5">
+                <span className="ls-font min-w-0 truncate text-left text-[14px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(15,45,90,0.75)' }}>{tr('fourPlayer')}</span>
                 <PlayChip />
               </div>
-              <span className="ls-font pb-1 text-center text-[13px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(40,10,90,0.7)' }}>{tr('fourPlayer')}</span>
             </button>
 
             <button
               onClick={() => { setSheet('offline'); setSheetMode('classic'); sfx.click() }}
-              className="ls-tile-green ls-shine ls-rise relative flex h-[min(30vw,16vh,124px)] flex-col overflow-hidden rounded-2xl p-1.5"
+              className="ls-tile-green ls-shine ls-rise relative flex h-[min(36vw,20vh,148px)] flex-col overflow-hidden rounded-2xl p-1.5"
               style={{ '--d': '300ms' } as React.CSSProperties}
               aria-label="Play offline — bots or pass and play"
             >
               <div className="relative min-h-0 flex-1">
-                <div className="grid h-full place-items-center pb-0.5"><Robot3D size={56} /></div>
+                <div className="grid h-full place-items-center pb-0.5"><Robot3D size={62} /></div>
+              </div>
+              <div className="flex items-center justify-between gap-1 px-0.5 pb-0.5">
+                <span className="ls-font min-w-0 truncate text-left text-[14px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(10,60,30,0.7)' }}>{tr('offline')}</span>
                 <PlayChip />
               </div>
-              <span className="ls-font pb-1 text-center text-[13px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(10,60,30,0.7)' }}>{tr('offline')}</span>
             </button>
           </div>
-              </div>
-
-              {/* right rail — friends + shop */}
-              <div className="flex shrink-0 flex-col gap-2.5">
-                <SideRailButton label={tr('friends')} tone="green" dot={onlineFriends > 0 ? '#4ade80' : undefined} onClick={() => setTab('friends')}>
-                  <Users size={20} />
-                </SideRailButton>
-                <SideRailButton label={tr('shop')} tone="blue" onClick={() => setTab('shop')}>
-                  <ShoppingBag size={20} />
-                </SideRailButton>
-              </div>
-            </div>
-          </div>
-
-          {/* two CSS-only floaters (composited transform, no JS loop) — kept clear of the rails */}
-          <div className="ls-float-a pointer-events-none absolute left-4 top-[20%] z-0" aria-hidden>
-            <DecoDie value={5} size={30} tilt={14} />
-          </div>
-          <div className="ls-float-b pointer-events-none absolute bottom-[22%] right-4 z-0" aria-hidden>
-            <DecoToken color="blue" size={20} />
-          </div>
-
-          {/* ============ DAILY REWARD strip — bottom widget above the nav, pill claims instantly ============ */}
-          <div className="ls-panel ls-panel-gold relative z-10 mb-2 flex shrink-0 items-center gap-2 rounded-2xl p-1.5">
-            <button
-              onClick={() => { setTab('chest'); sfx.click() }}
-              className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
-              aria-label={`${tr('dailyReward')} — ${tr('chest')}`}
-            >
-              <span className={`shrink-0 ${dailyClaimable ? 'ls-chest-wiggle' : ''}`}>
-                <ChestArt size={30} />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="ls-font block truncate text-[12.5px] leading-tight text-white">
-                  {dailyClaimable ? `${tr('dailyReward')} · ${tr('day')} ${(daily?.streak ?? 0) + 1}` : tr('claimedBack')}
-                </span>
-                <span className="mt-0.5 flex items-center gap-1 text-[10px] text-amber-100/90">
-                  <CoinIcon size={11} />
-                  {DAILY_REWARDS[daily ? Math.min(6, daily.streak) : 0].toLocaleString()} {tr('coinsShort')}
-                </span>
-              </span>
-              <span className="flex shrink-0 items-center gap-[3px]" aria-hidden>
-                {DAILY_REWARDS.map((r, i) => {
-                  const reached = (daily?.streak ?? 0) > i || (dailyClaimable && (daily?.streak ?? 0) === i)
-                  return <span key={i} className={`h-[7px] w-[7px] rounded-full ${reached ? 'bg-amber-300' : 'bg-white/20'}`} />
-                })}
-              </span>
-            </button>
-            {dailyClaimable ? (
-              <motion.button
-                whileTap={{ scale: 0.92 }}
-                onClick={() => { claimDaily(); sfx.click() }}
-                className="ls-font min-h-[40px] shrink-0 rounded-full px-3.5 text-[11px] font-semibold tracking-wide text-[#3A1D00]"
-                style={{
-                  background: 'linear-gradient(180deg,#ffe08a 0%,#f4ad38 55%,#df8f0b 100%)',
-                  boxShadow: '0 3px 0 #8a5a06, 0 6px 14px rgba(12,2,28,0.45), inset 0 2px 0 rgba(255,255,255,0.6)',
-                }}
-                aria-label={`${tr('claim')} ${tr('dailyReward')}`}
-              >
-                {tr('claim')}
-              </motion.button>
-            ) : (
-              <span
-                className="ls-font grid h-[40px] w-[40px] shrink-0 place-items-center rounded-full text-[15px] text-emerald-300"
-                style={{ background: 'rgba(16,185,129,0.16)', boxShadow: 'inset 0 0 0 1.5px rgba(52,211,153,0.45)' }}
-                aria-hidden
-              >
-                ✓
-              </span>
-            )}
           </div>
         </main>
 
