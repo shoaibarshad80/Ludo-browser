@@ -24,6 +24,7 @@ const EN: Dict = {
   twoPlayer: '2 PLAYER',
   fourPlayer: '4 PLAYER',
   privateTable: 'PRIVATE TABLE',
+  privateShort: 'PRIVATE',
   offline: 'OFFLINE',
   // sheets
   gameType: 'GAME TYPE',
@@ -124,6 +125,7 @@ const UR: Dict = {
   twoPlayer: '2 کھلاڑی',
   fourPlayer: '4 کھلاڑی',
   privateTable: 'نجی میز',
+  privateShort: 'نجی میز',
   offline: 'آف لائن',
   gameType: 'گیم کی قسم',
   entryStake: 'انٹری فیس',
@@ -216,6 +218,7 @@ const HI: Dict = {
   twoPlayer: '2 खिलाड़ी',
   fourPlayer: '4 खिलाड़ी',
   privateTable: 'प्राइवेट टेबल',
+  privateShort: 'प्राइवेट',
   offline: 'ऑफ़लाइन',
   gameType: 'गेम प्रकार',
   entryStake: 'एंट्री फ़ीस',

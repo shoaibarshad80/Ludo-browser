@@ -516,7 +516,7 @@ export default function MenuScreen() {
                 <div className="grid h-full place-items-center pb-0.5"><Crown3D size={72} className="max-h-full max-w-full" /></div>
               </div>
               <div className="flex items-center justify-between gap-1 px-0.5 pb-0.5">
-                <span className="ls-font min-w-0 truncate text-left text-[11px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(40,10,90,0.7)' }}>{tr('privateTable')}</span>
+                <span className="ls-font min-w-0 truncate text-left text-[11px] leading-none text-white" style={{ textShadow: '0 2px 0 rgba(40,10,90,0.7)' }}>{tr('privateShort')}</span>
                 <PlayChip />
               </div>
             </button>
