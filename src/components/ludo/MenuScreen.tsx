@@ -471,15 +471,15 @@ export default function MenuScreen() {
           </div>
 
           {/* ============ MIDDLE — play boxes centered, icon rails flanking LEFT/RIGHT
-              (classic Ludo Star lobby): boxes sit in the vertical middle and the rails
-              stay on their sides but are TOP-ALIGNED with the card stack, sitting
-              beside the top card row (items-start). Boxes stay wide-format via
-              min(30vw,17vh,124px) rows. mb-7 keeps the clear breathing gap above
-              the bottom nav. ============ */}
-          <div className="relative z-10 mb-7 flex min-h-0 flex-[6] items-start gap-2">
+              (classic Ludo Star lobby): boxes stay centered in the middle zone and the
+              rails keep their sides; each rail is sized to the card-stack height
+              (2 rows + gap) so its icons TOP-ALIGN with the top card row — beside the
+              cards and raised, not floating at mid-height. mb-7 keeps the clear
+              breathing gap above the bottom nav. ============ */}
+          <div className="relative z-10 mb-7 flex min-h-0 flex-[6] items-center gap-2">
 
             {/* left rail — same side as always, raised to the top of the card stack */}
-            <div className="flex shrink-0 flex-col gap-2.5">
+            <div className="flex h-[calc(min(30vw,17vh,124px)*2_+_10px)] shrink-0 flex-col gap-2.5">
               <SideRailButton label={tr('dailyReward')} tone="gold" badge={dailyClaimable ? 1 : 0} onClick={() => setTab('chest')}>
                 <Gift size={20} />
               </SideRailButton>
@@ -559,7 +559,7 @@ export default function MenuScreen() {
             </div>
 
             {/* right rail — same side as always, raised to the top of the card stack */}
-            <div className="flex shrink-0 flex-col gap-2.5">
+            <div className="flex h-[calc(min(30vw,17vh,124px)*2_+_10px)] shrink-0 flex-col gap-2.5">
               <SideRailButton label={tr('friends')} tone="green" dot={onlineFriends > 0 ? '#4ade80' : undefined} onClick={() => setTab('friends')}>
                 <Users size={20} />
               </SideRailButton>
