@@ -121,6 +121,12 @@ const EN: Dict = {
   chestSub: 'Open daily — rewards grow all week',
   today: 'TODAY',
   inviteTitle: 'INVITE FRIENDS',
+  // play dialogs — clarity pass
+  modeClassicDesc: '4 tokens · 1 die',
+  modeQuickDesc: '2 tokens · fast',
+  modeMasterDesc: '2 dice · pro',
+  potNote: 'Winner takes the pot',
+  joinWithCode: 'JOIN WITH ROOM CODE',
 }
 
 const UR: Dict = {
@@ -220,6 +226,11 @@ const UR: Dict = {
   chestSub: 'روز کھولیں — انعام ہفتے بھر بڑتا ہے',
   today: 'آج',
   inviteTitle: 'دوستوں کو بُلائیں',
+  modeClassicDesc: '4 گوٹیاں · 1 پاسہ',
+  modeQuickDesc: '2 گوٹیاں · تیز',
+  modeMasterDesc: '2 پاسے · پرو',
+  potNote: 'جیتنے والا پورا پوٹ لے جاتا ہے',
+  joinWithCode: 'روم کوڈ سے شامل ہوں',
 }
 
 const HI: Dict = {
@@ -319,6 +330,11 @@ const HI: Dict = {
   chestSub: 'रोज़ खोलें — इनाम पूरे हफ़्ते बढ़ता है',
   today: 'आज',
   inviteTitle: 'दोस्तों को बुलाएं',
+  modeClassicDesc: '4 गोटी · 1 पासा',
+  modeQuickDesc: '2 गोटी · तेज़',
+  modeMasterDesc: '2 पासे · प्रो',
+  potNote: 'जीतने वाला पूरा पॉट ले जाता है',
+  joinWithCode: 'रूम कोड से जुड़ें',
 }
 
 const DICTS: Record<Lang, Dict> = { en: EN, ur: UR, hi: HI }

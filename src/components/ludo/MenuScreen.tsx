@@ -20,7 +20,7 @@ import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowLeft, Bot, Camera, Check, ChevronRight, Clock, Copy, Flag, Gift, Globe,
-  KeyRound, Loader2, Play, Send, Settings, ShoppingBag, Trash2, Trophy,
+  KeyRound, Loader2, Lock, Play, Send, Settings, ShoppingBag, Trash2, Trophy,
   Users, Zap,
 } from 'lucide-react'
 import {
@@ -95,6 +95,78 @@ function PlayChip() {
     >
       <Play size={15} fill="#fff" className="translate-x-[1px] text-white" />
     </span>
+  )
+}
+
+// game-mode descriptions shown under each GAME TYPE chip so the player
+// actually knows what CLASSIC / QUICK / MASTER mean before starting
+const MODE_DESC_KEY: Record<GameMode, string> = {
+  classic: 'modeClassicDesc',
+  quick: 'modeQuickDesc',
+  master: 'modeMasterDesc',
+}
+
+function ModePicker({
+  value,
+  onChange,
+  tr,
+}: {
+  value: GameMode
+  onChange: (m: GameMode) => void
+  tr: (k: string) => string
+}) {
+  return (
+    <div>
+      <p className="ls-font mb-2 text-[10px] tracking-wide text-amber-200">{tr('gameType')}</p>
+      <div className="grid grid-cols-3 gap-2">
+        {(['classic', 'quick', 'master'] as GameMode[]).map((m) => (
+          <button
+            key={m}
+            onClick={() => { onChange(m); sfx.click() }}
+            data-active={value === m}
+            className="ls-option flex flex-col items-center gap-1 rounded-xl px-1 py-2.5 text-white"
+          >
+            <ModeIllustration kind={m} size={30} />
+            <span className="ls-font text-[12px] leading-none">{m.toUpperCase()}</span>
+            <span className="text-[9px] leading-tight text-fuchsia-100/65">{tr(MODE_DESC_KEY[m])}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function StakePicker({
+  value,
+  coins,
+  onChange,
+  tr,
+}: {
+  value: number
+  coins: number
+  onChange: (s: number) => void
+  tr: (k: string) => string
+}) {
+  return (
+    <div>
+      <p className="ls-font mb-2 text-[10px] tracking-wide text-amber-200">{tr('entryStake')}</p>
+      <div className="grid grid-cols-4 gap-2">
+        {[...STAKES].map((s) => {
+          const afford = coins >= s
+          return (
+            <button
+              key={s}
+              onClick={() => { if (afford) { onChange(s); sfx.click() } }}
+              disabled={!afford}
+              data-active={value === s}
+              className={`ls-option ls-font flex items-center justify-center gap-1 rounded-xl py-2.5 text-[12px] text-white ${!afford ? 'opacity-35' : ''}`}
+            >
+              {afford ? <CoinIcon size={12} /> : <Lock size={11} />} {s.toLocaleString()}
+            </button>
+          )
+        })}
+      </div>
+    </div>
   )
 }
 
@@ -348,7 +420,6 @@ export default function MenuScreen() {
   const hasPhoto = profile.avatar.startsWith('data:')
 
   const canPlay = profile.coins >= stake
-  const seats: 2 | 4 = sheet === 'table2' ? 2 : 4
 
   if (!hydrated) {
     return <BootScreen />
@@ -1084,69 +1155,27 @@ export default function MenuScreen() {
                 {(sheet === 'table2' || sheet === 'table4') && (
                   <div>
 
-                    <p className="ls-font mb-1.5 text-[10px] tracking-wide text-amber-200">{tr('gameType')}</p>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {(['classic', 'quick', 'master'] as GameMode[]).map((m) => (
-                        <button
-                          key={m}
-                          onClick={() => setSheetMode(m)}
-                          data-active={sheetMode === m}
-                          className="ls-option ls-font flex flex-col items-center gap-1 rounded-xl py-2 text-[11px] text-white"
-                        >
-                          <ModeIllustration kind={m} size={30} />
-                          {m.toUpperCase()}
-                        </button>
-                      ))}
+                    <ModePicker value={sheetMode} onChange={setSheetMode} tr={tr} />
+
+                    <div className="mt-4">
+                      <StakePicker value={stake} coins={profile.coins} onChange={setStake} tr={tr} />
                     </div>
 
-                    <p className="ls-font mb-1.5 mt-3 text-[10px] tracking-wide text-amber-200">{tr('entryStake')}</p>
-                    <div className="grid grid-cols-4 gap-1.5">
-                      {[...STAKES].map((s) => {
-                        const afford = profile.coins >= s
-                        return (
-                          <button
-                            key={s}
-                            onClick={() => afford && setStake(s)}
-                            disabled={!afford}
-                            data-active={stake === s}
-                            className={`ls-option ls-font flex items-center justify-center gap-1 rounded-xl py-2 text-[11px] text-white ${!afford ? 'opacity-35' : ''}`}
-                          >
-                            <CoinIcon size={12} /> {s.toLocaleString()}
-                          </button>
-                        )
-                      })}
-                    </div>
-
-                    <div className="mt-3.5 grid grid-cols-1 gap-2">
-                      <motion.button
-                        whileTap={{ scale: 0.97 }}
-                        onClick={playOnlineFromSheet}
-                        disabled={!canPlay || busy}
-                        className="ls-btn ls-btn-gold ls-font flex items-center justify-center gap-2 rounded-2xl py-3.5 text-base text-white"
-                      >
-                        {busy ? (
-                          <span className="inline-flex items-center gap-2"><Loader2 size={17} className="animate-spin" /> {tr('findingTable')}</span>
-                        ) : (
-                          <>
-                            <Globe size={17} /> {tr('playOnline')}
-                          </>
-                        )}
-                      </motion.button>
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          onClick={() => startVsComputer(sheetMode, seats, stake)}
-                          className="ls-btn ls-btn-green ls-font flex items-center justify-center gap-1 rounded-xl px-1 py-2.5 text-[11px] text-white"
-                        >
-                          <Bot size={13} /> {tr('vsBot')}
-                        </button>
-                        <button
-                          onClick={() => startPass(sheetMode, seats, stake)}
-                          className="ls-btn ls-font flex items-center justify-center gap-1 rounded-xl px-1 py-2.5 text-[11px] text-white"
-                        >
-                          <Users size={13} /> {tr('passNPlay')}
-                        </button>
-                      </div>
-                    </div>
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={playOnlineFromSheet}
+                      disabled={!canPlay || busy}
+                      className="ls-btn ls-btn-gold ls-font mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-base text-white"
+                    >
+                      {busy ? (
+                        <span className="inline-flex items-center gap-2"><Loader2 size={17} className="animate-spin" /> {tr('findingTable')}</span>
+                      ) : (
+                        <>
+                          <Globe size={17} /> {tr('playOnline')}
+                        </>
+                      )}
+                    </motion.button>
+                    <p className="mt-2 text-center text-[10px] text-fuchsia-100/55">{tr('potNote')}</p>
 
                     {!canPlay && (
                       <div className="mt-2.5 flex items-center gap-2 rounded-xl border border-rose-400/30 bg-rose-950/50 px-3 py-2">
@@ -1163,23 +1192,7 @@ export default function MenuScreen() {
                 {sheet === 'private' && (
                   <div>
 
-                    <p className="ls-font mb-1.5 text-[10px] tracking-wide text-amber-200">{tr('entryStake')}</p>
-                    <div className="grid grid-cols-4 gap-1.5">
-                      {[...STAKES].map((s) => {
-                        const afford = profile.coins >= s
-                        return (
-                          <button
-                            key={s}
-                            onClick={() => afford && setStake(s)}
-                            disabled={!afford}
-                            data-active={stake === s}
-                            className={`ls-option ls-font flex items-center justify-center gap-1 rounded-xl py-2 text-[11px] text-white ${!afford ? 'opacity-35' : ''}`}
-                          >
-                            <CoinIcon size={12} /> {s.toLocaleString()}
-                          </button>
-                        )
-                      })}
-                    </div>
+                    <StakePicker value={stake} coins={profile.coins} onChange={setStake} tr={tr} />
 
                     <motion.button
                       whileTap={{ scale: 0.97 }}
@@ -1202,7 +1215,8 @@ export default function MenuScreen() {
                       )}
                     </motion.button>
 
-                    <div className="mt-3 flex items-center gap-2 border-t border-white/10 pt-3">
+                    <p className="ls-font mb-2 mt-4 text-[10px] tracking-wide text-amber-200">{tr('joinWithCode')}</p>
+                    <div className="flex items-center gap-2">
                       <input
                         value={joinCode}
                         onChange={(e) => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
@@ -1234,36 +1248,23 @@ export default function MenuScreen() {
                 {sheet === 'offline' && (
                   <div>
 
-                    <p className="ls-font mb-1.5 text-[10px] tracking-wide text-amber-200">{tr('gameType')}</p>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {(['classic', 'quick', 'master'] as GameMode[]).map((m) => (
-                        <button
-                          key={m}
-                          onClick={() => setSheetMode(m)}
-                          data-active={sheetMode === m}
-                          className="ls-option ls-font flex flex-col items-center gap-1 rounded-xl py-2 text-[11px] text-white"
-                        >
-                          <ModeIllustration kind={m} size={30} />
-                          {m.toUpperCase()}
-                        </button>
-                      ))}
-                    </div>
+                    <ModePicker value={sheetMode} onChange={setSheetMode} tr={tr} />
 
-                    <p className="ls-font mb-1.5 mt-3 text-[10px] tracking-wide text-amber-200">{tr('players')}</p>
-                    <div className="grid grid-cols-2 gap-1.5">
+                    <p className="ls-font mb-2 mt-4 text-[10px] tracking-wide text-amber-200">{tr('players')}</p>
+                    <div className="grid grid-cols-2 gap-2">
                       {([2, 4] as Array<2 | 4>).map((n) => (
                         <button
                           key={n}
-                          onClick={() => setOfflineSeats(n)}
+                          onClick={() => { setOfflineSeats(n); sfx.click() }}
                           data-active={offlineSeats === n}
-                          className="ls-option ls-font flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[12px] text-white"
+                          className="ls-option ls-font flex items-center justify-center gap-1.5 rounded-xl py-3 text-[12px] text-white"
                         >
                           <Users size={13} /> {n} {tr('players')}
                         </button>
                       ))}
                     </div>
 
-                    <div className="mt-3.5 grid grid-cols-1 gap-2">
+                    <div className="mt-4 grid grid-cols-1 gap-2">
                       <motion.button
                         whileTap={{ scale: 0.97 }}
                         onClick={() => startVsComputer(sheetMode, offlineSeats, 0)}
