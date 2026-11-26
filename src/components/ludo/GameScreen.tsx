@@ -352,7 +352,9 @@ export default function GameScreen() {
     />
   )
 
-  // pill text (crown status line under the board)
+  // pill text (crown status line under the board) — names beat colors:
+  // "Rocky's Turn" reads better than "Red's Turn" (Ludo Star style)
+  const shortName = (n: string) => (n.length > 11 ? `${n.slice(0, 10)}…` : n)
   const pillText =
     game.phase === 'gameover'
       ? 'GAME OVER'
@@ -366,7 +368,7 @@ export default function GameScreen() {
               : movableTokenIds.length > 0
                 ? 'TAP A GLOWING TOKEN'
                 : '...'
-            : `${turnColor.charAt(0).toUpperCase() + turnColor.slice(1)}'s Turn`
+            : `${shortName(turnPlayer.name)}'s Turn`
 
   return (
     <div className="ls-palace relative h-full overflow-hidden">
@@ -452,7 +454,9 @@ export default function GameScreen() {
                         ? 'linear-gradient(180deg,#ffe08a,#e09b1a)'
                         : m.kind === 'forfeit'
                           ? 'linear-gradient(180deg,#7f1d1d,#450a0a)'
-                          : 'linear-gradient(180deg,#4a1258,#2b0a3a)',
+                          : m.kind === 'lock'
+                            ? 'linear-gradient(180deg,#f6dd93,#b9851f)'
+                            : 'linear-gradient(180deg,#4a1258,#2b0a3a)',
                   border: '2px solid rgba(233,213,255,0.7)',
                   textShadow: '0 1px 0 rgba(10,2,20,0.6)',
                 }}

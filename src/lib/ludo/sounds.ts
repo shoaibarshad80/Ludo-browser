@@ -15,6 +15,20 @@ export function isMuted() {
   return muted
 }
 
+/**
+ * Touch feedback for phones (Android/Chromium): short vibration pulses
+ * for dice, captures, locks and wins. Follows the master mute switch;
+ * silently ignored where the Vibration API is missing (iOS Safari).
+ */
+export function haptic(pattern: number | number[]) {
+  if (typeof window === 'undefined' || muted) return
+  try {
+    navigator.vibrate?.(pattern)
+  } catch {
+    /* not supported */
+  }
+}
+
 export function setSfxEnabled(b: boolean) {
   sfxEnabled = b
 }
@@ -93,6 +107,12 @@ export const sfx = {
   },
   pass() {
     tone(300, 0.12, 'sine', 0.05, 0, 200)
+  },
+  /** metallic clink when two pawns lock into a pair (block) */
+  lock() {
+    tone(1046, 0.06, 'triangle', 0.09)
+    tone(1568, 0.09, 'triangle', 0.07, 0.05)
+    tone(523, 0.14, 'sine', 0.05, 0.08)
   },
   emote() {
     tone(880, 0.07, 'triangle', 0.07)

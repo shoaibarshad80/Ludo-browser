@@ -484,6 +484,41 @@ body {
   }
 }
 
+/* ---------- locked pairs (classic block cells) ---------- */
+
+/* owner-colored guard ring around a cell locked by a same-color pair */
+.ls-lock-ring {
+  animation: ls-lock-pulse 2.2s ease-in-out infinite;
+}
+@keyframes ls-lock-pulse {
+  0%,
+  100% {
+    opacity: 0.95;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+}
+
+/* ---------- move preview: pulsing destination marker ---------- */
+
+.ls-dest-marker {
+  animation: ls-dest-pulse 1.15s ease-in-out infinite;
+}
+@keyframes ls-dest-pulse {
+  0%,
+  100% {
+    opacity: 0.95;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(1.18);
+  }
+}
+
 /* ---------- board juice: hop dust, finish halo, live yard, gem twinkle ---------- */
 
 /* dust motes kicked up under a hopping pawn (while it is in the air) */
@@ -605,6 +640,15 @@ body {
   .ls-spin-slow, .ls-float, .ls-safe-halo, .ls-finish-float, .ls-finish-halo, .ls-yard-live, .ls-twinkle,
   .ls-hero-float, .ls-float-a, .ls-float-b {
     animation: none !important;
+  }
+  .ls-lock-ring {
+    animation: none !important;
+    opacity: 0.85;
+  }
+  .ls-dest-marker {
+    animation: none !important;
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1);
   }
   .ls-safe-halo {
     opacity: 0.7;

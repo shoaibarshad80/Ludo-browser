@@ -12,13 +12,13 @@ import {
 import { botChooseMove } from '../src/lib/ludo/ai'
 import type { GameConfig, GameState, Move } from '../src/lib/ludo/types'
 
-function playGame(config: GameConfig, maxTurns = 5000): { winner: string; turns: number; state: GameState } {
+function playGame(config: GameConfig, maxTurns = 5000, rng: () => number = Math.random): { winner: string; turns: number; state: GameState } {
   let state = createGame(config)
   let turns = 0
   while (!state.winner && turns < maxTurns) {
     turns++
     if (state.phase === 'roll') {
-      const r = rollDice(state)
+      const r = rollDice(state, rng)
       state = r.state
       if (r.forfeited) {
         state = passTurn(state)
@@ -97,9 +97,9 @@ const cfg: GameConfig = {
     { color: 'green', name: 'B', avatar: 'dragon', isBot: true },
   ],
 }
-const g1 = playGame(cfg, 5000)
+const g1 = playGame(cfg, 5000, rand)
 seed = 42
-const g2 = playGame(cfg, 5000)
+const g2 = playGame(cfg, 5000, rand)
 console.log(`deterministic replay: ${g1.winner === g2.winner && g1.turns === g2.turns ? 'PASS' : 'FAIL'}`)
 
 // 2-player game balance sanity

@@ -140,6 +140,9 @@ export function legalMovesForDie(state: GameState, dieIndex: number): Move[] {
     if (t.location === 'yard') {
       if (die !== 6) continue // need a six to open
       const startIdx = START_IDX[player.color]
+      // an opponent's locked pair sitting on my start cell blocks the entry
+      const entryBlocker = blockColorAt(state, startIdx)
+      if (entryBlocker && entryBlocker !== player.color) continue
       const captures = capturesAt(state, player.color, startIdx)
       moves.push({
         tokenId: t.id,
@@ -157,6 +160,8 @@ export function legalMovesForDie(state: GameState, dieIndex: number): Move[] {
 
     const target = computeTarget(player.color, die, t)
     if (!target) continue
+    // opponents' locked pairs cannot be landed on or passed through
+    if (pathBlockedByPair(state, player.color, tokenProgress(t), target.progress)) continue
     const captures = target.location === 'track' ? capturesAt(state, player.color, target.trackIdx) : []
     const landsSafe = target.location !== 'track' || SAFE_IDX.has(target.trackIdx)
     moves.push({
@@ -185,6 +190,46 @@ function capturesAt(state: GameState, moverColor: Token['color'], trackIdx: numb
     }
   }
   return captured
+}
+
+// ---------- locked pairs (blocks) ----------
+
+/**
+ * Classic Ludo "block": 2+ tokens of ONE color sharing a track cell form
+ * a LOCKED PAIR. Opponents may neither land on it nor pass through it;
+ * the owning color moves across its own pair freely.
+ * Returns the owning color, or null when the cell is not locked.
+ */
+export function blockColorAt(state: GameState, trackIdx: number): Token['color'] | null {
+  if (trackIdx < 0 || trackIdx > 51) return null
+  for (const p of state.players) {
+    let n = 0
+    for (const t of p.tokens) {
+      if (t.location === 'track' && t.trackIdx === trackIdx) n++
+    }
+    if (n >= 2) return p.color
+  }
+  return null
+}
+
+/**
+ * True when the mover's path (each track cell of progress from+1 .. min(to,50))
+ * crosses a cell locked by an OPPONENT pair — landing on a locked cell is
+ * also blocked. Own-color locks never block the mover.
+ */
+function pathBlockedByPair(
+  state: GameState,
+  moverColor: Token['color'],
+  fromProgress: number,
+  toProgress: number
+): boolean {
+  const last = Math.min(toProgress, 50)
+  for (let p = fromProgress + 1; p <= last; p++) {
+    const idx = trackIdxFor(moverColor, p)
+    const blocker = blockColorAt(state, idx)
+    if (blocker && blocker !== moverColor) return true
+  }
+  return false
 }
 
 export function legalMoves(state: GameState): Move[] {

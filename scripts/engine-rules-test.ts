@@ -1,12 +1,15 @@
 // Engine rule verification: extra turn on 6, capture/finish extra turn,
-// turn order rotation, three-six forfeit, zero-crash over many games.
+// turn order rotation, three-six forfeit, zero-crash over many games,
+// locked-pair (block) rule: pairs can't be captured, landed on or passed.
 import {
   applyMove,
+  blockColorAt,
   createGame,
   legalMoves,
   passTurn,
   rollDice,
 } from '../src/lib/ludo/engine'
+import { trackIdxFor } from '../src/lib/ludo/board'
 import type { GameState, Move } from '../src/lib/ludo/types'
 
 let failures = 0
@@ -203,6 +206,99 @@ function rig(seq: number[]) {
     }
   }
   console.log('six rolls:', sixRolls, 'extra-turn-on-six confirmed:', extraTurnOnSix)
+}
+
+// ---- Test 6: locked pair (block) — enemies cannot land on or pass it ----
+{
+  const mk = () =>
+    createGame({
+      mode: 'classic',
+      players: [
+        { color: 'red', name: 'A', avatar: 'x', isBot: false },
+        { color: 'green', name: 'B', avatar: 'y', isBot: false },
+      ],
+    })
+  const place = (g: GameState, pIdx: number, tokId: number, progress: number) => {
+    const p = g.players[pIdx]
+    const t = p.tokens[tokId]
+    if (progress < 0) {
+      t.location = 'yard'
+      t.trackIdx = -1
+      t.homeStep = 0
+      t.progress = 0
+    } else {
+      t.location = 'track'
+      t.trackIdx = trackIdxFor(p.color, progress)
+      t.homeStep = 0
+      t.progress = progress
+    }
+  }
+
+  const g = mk()
+  place(g, 0, 0, 10) // red pair on abs idx 11 (non-safe)
+  place(g, 0, 1, 10)
+  place(g, 0, 2, -1)
+  place(g, 0, 3, -1)
+  place(g, 1, 0, 46) // green token at abs 8, two steps behind the pair
+  place(g, 1, 1, -1)
+  check('T6 blockColorAt detects the red pair', blockColorAt(g, 11) === 'red')
+
+  // die 3 would land green exactly ON the pair — illegal
+  const { state: s1 } = rollDice({ ...g, turn: 1 }, rig([3]))
+  check('T6 enemy cannot land on a locked pair', legalMoves(s1).length === 0)
+
+  // die 1 lands just before the pair — legal
+  const { state: s2 } = rollDice({ ...g, turn: 1 }, rig([1]))
+  check('T6 stepping up to the pair is allowed', legalMoves(s2).some((m) => m.tokenId === 0))
+
+  // die 6 would carry green THROUGH the pair cell into the home lane — illegal
+  const { state: s3 } = rollDice({ ...g, turn: 1 }, rig([6]))
+  const mvs3 = legalMoves(s3)
+  check('T6 path through a locked pair is blocked', !mvs3.some((m) => m.tokenId === 0))
+  check('T6 opening elsewhere unaffected by the pair', mvs3.some((m) => m.opens))
+
+  // own color may land on (join) its own pair — 3-stack stays legal
+  const g4 = mk()
+  place(g4, 0, 0, 10)
+  place(g4, 0, 1, 10)
+  place(g4, 0, 2, 4)
+  place(g4, 0, 3, -1)
+  place(g4, 1, 0, -1)
+  place(g4, 1, 1, -1)
+  const { state: s4 } = rollDice(g4, rig([6]))
+  const own = legalMoves(s4).find((m) => m.tokenId === 2)
+  check('T6 own color may join its own pair', !!own && own.to.trackIdx === 11 && own.captures.length === 0)
+
+  // ---- Test 7: enemy pair parked on MY start blocks opening ----
+  const g5 = mk()
+  const greenProgForRedStart = (1 - 14 + 52) % 52 // 39
+  place(g5, 1, 0, greenProgForRedStart)
+  place(g5, 1, 1, greenProgForRedStart)
+  place(g5, 1, 2, -1)
+  place(g5, 1, 3, -1)
+  check('T7 green pair detected on red start', blockColorAt(g5, 1) === 'green')
+  const { state: s5 } = rollDice(g5, rig([6]))
+  check('T7 entry blocked by enemy pair on my start', legalMoves(s5).length === 0)
+
+  // ---- Test 8: single enemy tokens are still capturable (regression) ----
+  const g8 = mk()
+  place(g8, 1, 0, 1) // green single at abs 15 (non-safe)
+  place(g8, 1, 1, -1)
+  place(g8, 1, 2, -1)
+  place(g8, 1, 3, -1)
+  place(g8, 0, 0, 8) // red at abs 9, die 6 -> abs 15 captures
+  place(g8, 0, 1, -1)
+  place(g8, 0, 2, -1)
+  place(g8, 0, 3, -1)
+  const { state: s8 } = rollDice(g8, rig([6]))
+  const cap = legalMoves(s8).find((m) => m.tokenId === 0)
+  check('T8 single enemy still capturable', !!cap && cap.captures.length === 1)
+
+  // applying the capture move still works and sends the victim home
+  if (cap) {
+    const after = applyMove(s8, cap)
+    check('T8 captured token returns to yard', after.players[1].tokens[0].location === 'yard')
+  }
 }
 
 console.log(failures === 0 ? 'ALL ENGINE RULE TESTS PASSED' : failures + ' FAILURES')

@@ -125,8 +125,7 @@ function drive(room: Room) {
         if (!room.state || room.state.phase !== 'roll') return
         cur.timeouts += 1
         if (cur.timeouts >= 2 && !cur.isBot) {
-          cur.isBot = true
-          io.to(room.code).emit('game:state', { state: room.state })
+          botTakeover(room, cur)
         }
         doRoll(room)
       }, TURN_SECONDS * 1000 + 900)
@@ -151,11 +150,28 @@ function drive(room: Room) {
       if (!room.state || room.state.phase !== 'move') return
       cur.timeouts += 1
       if (cur.timeouts >= 2 && !cur.isBot) {
-        cur.isBot = true
-        io.to(room.code).emit('game:state', { state: room.state })
+        botTakeover(room, cur)
       }
       doBotMove(room)
     }, TURN_SECONDS * 1000 + 900)
+  }
+}
+
+/**
+ * Hand a human seat to a bot (AFK timeouts or leave). BUGFIX: the old
+ * code flipped only the RoomPlayer flag and broadcast the UNCHANGED
+ * game state, so every client still saw the seat as human — the UI
+ * showed a live "your turn" die while the server was already driving
+ * a bot for it. Keep the authoritative state and the room roster in
+ * sync, then broadcast the corrected state.
+ */
+function botTakeover(room: Room, player: RoomPlayer) {
+  player.isBot = true
+  if (room.state) {
+    const idx = room.players.indexOf(player)
+    const sp = room.state.players[idx]
+    if (sp && sp.color === player.color) sp.isBot = true
+    io.to(room.code).emit('game:state', { state: room.state })
   }
 }
 
@@ -372,7 +388,7 @@ function leaveRoom(socket: Socket, room: Room, wasDisconnect = false) {
   // playing / finished: bot takeover, keep the game alive
   if (!wasDisconnect && me.socketId) {
     me.connected = false
-    me.isBot = true
+    botTakeover(room, me)
     io.to(room.code).emit('game:chat', {
       color: me.color,
       name: 'System',
@@ -627,7 +643,7 @@ io.on('connection', (socket: Socket) => {
 
     // playing: bot takeover, keep the game alive
     if (me && room.state && room.state.phase !== 'gameover') {
-      me.isBot = true
+      botTakeover(room, me)
       io.to(room.code).emit('game:chat', {
         color: me.color,
         name: 'System',

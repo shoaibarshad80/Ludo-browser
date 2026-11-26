@@ -15,7 +15,7 @@ import {
 import { botChooseMove } from '@/lib/ludo/ai'
 import { START_IDX, trackIdxFor, tokenScreenPos } from '@/lib/ludo/board'
 import { AVATARS, FREE_REFILL, STARTING_COINS, TURN_SECONDS } from '@/lib/ludo/constants'
-import { sfx, setMuted as setSfxMuted, setSfxEnabled } from '@/lib/ludo/sounds'
+import { sfx, haptic, setMuted as setSfxMuted, setSfxEnabled } from '@/lib/ludo/sounds'
 import { getSocket, online } from '@/lib/online/client'
 import { isLang, type Lang } from '@/lib/ludo/i18n'
 
@@ -53,7 +53,7 @@ export interface Session {
 export interface FloatMsg {
   id: number
   text: string
-  kind: 'info' | 'capture' | 'six' | 'pass' | 'forfeit' | 'coin'
+  kind: 'info' | 'capture' | 'six' | 'pass' | 'forfeit' | 'coin' | 'lock'
 }
 
 export interface EmoteMsg {
@@ -365,6 +365,35 @@ interface OnlineMove {
   finishes: boolean
 }
 
+const COLOR_NAME: Record<Color, string> = {
+  red: 'Red',
+  green: 'Green',
+  yellow: 'Yellow',
+  blue: 'Blue',
+}
+
+/** Colors whose tokens were captured (measured on the PRE-move state). */
+function victimColors(g0: GameState, captures: number[]): Color[] {
+  const out: Color[] = []
+  for (const p of g0.players) {
+    if (p.tokens.some((t) => t.location === 'track' && captures.includes(t.id))) out.push(p.color)
+  }
+  return out
+}
+
+/**
+ * Pair-lock feedback shared by local + online moves: when a pawn lands
+ * on a track cell where one of its own kind already sits, the cell
+ * becomes a LOCKED pair (classic block) — clang + toast.
+ * (Implemented inline in animateAndApply / the online game:moved handler,
+ * which need slightly different pre/post state shapes.)
+ */
+
+/** count of a color's tokens on one track cell in a given state */
+function countAt(state: GameState, color: Color, trackIdx: number): number {
+  return state.players.find((p) => p.color === color)?.tokens.filter((t) => t.location === 'track' && t.trackIdx === trackIdx).length ?? 0
+}
+
 export const useLudo = create<LudoStore>((set, get) => {
   // ---- core flow helpers (defined inside create for set/get access) ----
 
@@ -384,6 +413,7 @@ export const useLudo = create<LudoStore>((set, get) => {
     if (!session || !result.winner) return
     const winnerPlayer = result.players.find((p) => p.color === result.winner)
     const youWon = result.winner === session.youColor
+    haptic(youWon ? [80, 60, 80, 60, 180] : [120])
     const pot = session.pot
     const coinDelta = youWon ? pot : 0
     // net coin change of the whole game (stake paid at start, pot collected on win)
@@ -495,9 +525,32 @@ export const useLudo = create<LudoStore>((set, get) => {
     const mover = g0.players[g0.turn]
     if (move.captures.length > 0) {
       sfx.capture()
-      pushFloat(`Captured ${move.captures.length} token${move.captures.length > 1 ? 's' : ''}!`, 'capture')
+      haptic(60)
+      const victims = victimColors(g0, move.captures)
+      const names = victims.map((c) => COLOR_NAME[c]).join(' & ')
+      const mine = get().session?.youColor
+      if (mine && victims.includes(mine)) {
+        pushFloat(`${mover.name} captured your token${move.captures.length > 1 ? 's' : ''}!`, 'capture')
+      } else if (mover.color === mine) {
+        pushFloat(`You captured ${names}!`, 'capture')
+      } else {
+        pushFloat(`${mover.name} captured ${names}!`, 'capture')
+      }
     }
-    if (move.finishes) sfx.finish()
+    if (move.finishes) {
+      sfx.finish()
+      haptic(50)
+    }
+    // pair-lock: landing beside my own pawn forms the classic block
+    if (move.to.location === 'track') {
+      const before = countAt(g0, mover.color, move.to.trackIdx)
+      const after = countAt(result, mover.color, move.to.trackIdx)
+      if (before === 1 && after >= 2) {
+        sfx.lock()
+        haptic([30, 40, 30])
+        pushFloat('Pair locked! Opponents can\'t pass it', 'lock')
+      }
+    }
     // bot banter: taunt on capture/finish, victims cry, all throttled
     if (mover.isBot) {
       if (move.captures.length > 0) botEmote(mover.color, 'capture', 0.38)
@@ -514,6 +567,16 @@ export const useLudo = create<LudoStore>((set, get) => {
       finishGame(result)
       return
     }
+    // master mode: doubles hand the roll back — call it out
+    if (
+      result.phase === 'roll' &&
+      result.turn === g0.turn &&
+      g0.mode === 'master' &&
+      g0.lastRoll.length === 2 &&
+      g0.lastRoll[0] === g0.lastRoll[1]
+    ) {
+      pushFloat('Doubles! Roll again', 'six')
+    }
     scheduleNext()
   }
 
@@ -523,11 +586,15 @@ export const useLudo = create<LudoStore>((set, get) => {
     if (!g || g.phase !== 'roll') return
     set({ canRoll: false, diceRolling: true })
     sfx.dice()
+    haptic(14)
     await sleep(450)
     if (gen !== loopGen) return
     const { state, rolled, forfeited } = rollDice(g)
     set({ game: state, diceValues: rolled, diceRolling: false, selectedDie: 0 })
-    if (rolled[0] === 6 || (state.mode === 'master' && rolled.every((d) => d === 6))) sfx.six()
+    if (rolled[0] === 6 || (state.mode === 'master' && rolled.every((d) => d === 6))) {
+      sfx.six()
+      haptic(30)
+    }
     if (forfeited) {
       pushFloat(`Three sixes! ${g.players[g.turn].name} loses the turn`, 'forfeit')
       if (g.players[g.turn].isBot) botEmote(g.players[g.turn].color, 'forfeit', 0.6)
@@ -619,7 +686,11 @@ export const useLudo = create<LudoStore>((set, get) => {
       const gen = ++loopGen
       cancelSchedule()
       set({ game: state, diceValues: rolled, diceRolling: false, canRoll: false, selectedDie: 0 })
-      if (rolled[0] === 6) sfx.six()
+      haptic(14)
+      if (rolled[0] === 6 || (state.mode === 'master' && rolled.every((d) => d === 6))) {
+        sfx.six()
+        haptic(30)
+      }
       if (forfeited) {
         pushFloat('Three sixes! Turn forfeited', 'forfeit')
       }
@@ -645,9 +716,35 @@ export const useLudo = create<LudoStore>((set, get) => {
           if (gen !== loopGen) return
           if (move.captures.length > 0) {
             sfx.capture()
-            pushFloat('Capture!', 'capture')
+            haptic(60)
+            const victims = victimColors(g0, move.captures)
+            const names = victims.map((c) => COLOR_NAME[c]).join(' & ')
+            const moverName = state.players.find((p) => p.color === move.color)?.name ?? 'Opponent'
+            const mine = get().session?.youColor
+            if (mine && victims.includes(mine)) {
+              pushFloat(`${moverName} captured your token${move.captures.length > 1 ? 's' : ''}!`, 'capture')
+            } else if (move.color === mine) {
+              pushFloat(`You captured ${names}!`, 'capture')
+            } else {
+              pushFloat(`${moverName} captured ${names}!`, 'capture')
+            }
           }
-          if (move.finishes) sfx.finish()
+          if (move.finishes) {
+            sfx.finish()
+            haptic(50)
+          }
+          // pair-lock clang for online moves too (find the pawn's landing cell
+          // in the authoritative state, then compare partner counts)
+          const dest = state.players.find((p) => p.color === move.color)?.tokens[move.tokenId]
+          if (dest && dest.location === 'track') {
+            const before = countAt(g0, move.color, dest.trackIdx)
+            const after = countAt(state, move.color, dest.trackIdx)
+            if (before === 1 && after >= 2) {
+              sfx.lock()
+              haptic([30, 40, 30])
+              pushFloat('Pair locked! Opponents can\'t pass it', 'lock')
+            }
+          }
           set({ game: state, animating: false, diceValues: [] })
           setTimeout(() => scheduleNextOnline(), 250)
         })()
@@ -675,6 +772,7 @@ export const useLudo = create<LudoStore>((set, get) => {
       if (!session) return
       const youWon = winner === session.youColor
       const netDelta = youWon ? pot - session.stake : -session.stake
+      haptic(youWon ? [80, 60, 80, 60, 180] : [120])
       if (youWon) {
         get().addCoins(pot)
         sfx.win()
@@ -919,11 +1017,15 @@ export const useLudo = create<LudoStore>((set, get) => {
       const gen = ++loopGen
       set({ canRoll: false, diceRolling: true })
       sfx.dice()
+      haptic(14)
       await sleep(650)
       if (gen !== loopGen) return
       const { state, rolled, forfeited } = rollDice(g)
       set({ game: state, diceValues: rolled, diceRolling: false, selectedDie: 0 })
-      if (rolled[0] === 6) sfx.six()
+      if (rolled[0] === 6 || (g.mode === 'master' && rolled.every((d) => d === 6))) {
+        sfx.six()
+        haptic(30)
+      }
       if (forfeited) {
         pushFloat('Three sixes! Turn forfeited', 'forfeit')
         const passed = passTurn(state)
@@ -953,7 +1055,16 @@ export const useLudo = create<LudoStore>((set, get) => {
       }
       if (s.session?.online) {
         set({ movableTokenIds: [], animating: true })
+        const sentVersion = g.version
         online.emit('game:move', { tokenId: move.tokenId, dieIndex: move.dieIndex })
+        // failsafe: if the server stalls and never answers, release the
+        // board so the turn timer / auto-play can still act
+        setTimeout(() => {
+          const st = get()
+          if (st.animating && st.game && st.game.version === sentVersion && st.session?.online) {
+            set({ animating: false })
+          }
+        }, 4000)
         return
       }
       await animateAndApply(g, move)

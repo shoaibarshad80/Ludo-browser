@@ -27,7 +27,7 @@ import {
   stackPawnSize,
   tokenScreenPos,
 } from '@/lib/ludo/board'
-import { legalMoves } from '@/lib/ludo/engine'
+import { blockColorAt, legalMoves } from '@/lib/ludo/engine'
 import Pawn3D from '@/components/ludo/Pawn3D'
 import { sfx } from '@/lib/ludo/sounds'
 
@@ -70,6 +70,25 @@ const CELL_BG = 'linear-gradient(160deg, #ffffff 0%, #eef1ff 100%)'
 const SAFE_BG = 'linear-gradient(160deg, #f2f4ff 0%, #e3e8fb 100%)'
 
 const BEVEL_LIGHT = 'inset 0 1.5px 0 rgba(255,255,255,0.9), inset 0 -2px 3px rgba(30,40,90,0.10)'
+
+/** gold padlock badge — marks a cell locked by a same-color pair (classic block) */
+function PadlockGlyph({ scale = 1 }: { scale?: number }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-full w-full"
+      style={{ transform: `scale(${scale})`, filter: 'drop-shadow(0 1.5px 1px rgba(10,2,20,0.45))' }}
+    >
+      {/* shackle */}
+      <path d="M8 10.6V8a4 4 0 0 1 8 0v2.6" fill="none" stroke="#ffe6a8" strokeWidth="2.7" strokeLinecap="round" />
+      {/* body */}
+      <rect x="4.6" y="10.4" width="14.8" height="10.4" rx="2.8" fill="url(#ls-safe-star-grad)" stroke="rgba(96,58,4,0.65)" strokeWidth="1" />
+      {/* keyhole */}
+      <circle cx="12" cy="14.6" r="1.8" fill="#5a3a06" />
+      <rect x="11.15" y="15.4" width="1.7" height="3" rx="0.85" fill="#5a3a06" />
+    </svg>
+  )
+}
 
 function cellStyle(isSafe: boolean, isStar: boolean, owner: Color | null) {
   if (owner) {
@@ -165,6 +184,50 @@ export default function Board({
   // cell changed gets a temporary lift (scale + glow) while it glides
   const prevPosRef = useRef<Map<string, string>>(new Map())
   const hopUntilRef = useRef<Map<string, number>>(new Map())
+
+  // LOCKED PAIRS (classic block): track cells holding 2+ tokens of one
+  // color. Opponents cannot land on or pass them — show the gold padlock.
+  const locks = useMemo(() => {
+    const out: Array<{ idx: number; color: Color }> = []
+    for (let idx = 0; idx < 52; idx++) {
+      const owner = blockColorAt(game, idx)
+      if (owner) out.push({ idx, color: owner })
+    }
+    return out
+  }, [game])
+
+  // MOVE PREVIEW: where the turn player's legal moves would land.
+  // Pulsing ring on every reachable cell; a tiny lock inside the ring
+  // means "this tap forms a new locked pair".
+  const destinations = useMemo(() => {
+    if (animating || game.phase !== 'move') return []
+    const mover = game.players[game.turn]
+    if (!mover) return []
+    const out: Array<{ key: string; x: number; y: number; pair: boolean; finish: boolean }> = []
+    const seen = new Set<string>()
+    for (const m of legalMoves(game)) {
+      if (m.to.location === 'track') {
+        const key = `trk${m.to.trackIdx}`
+        if (seen.has(key)) continue
+        seen.add(key)
+        const cell = TRACK[m.to.trackIdx]
+        const ownBefore = mover.tokens.filter((t) => t.location === 'track' && t.trackIdx === m.to.trackIdx).length
+        out.push({ key, x: ((cell.c + 0.5) / BOARD_SIZE) * 100, y: ((cell.r + 0.5) / BOARD_SIZE) * 100, pair: ownBefore >= 1, finish: false })
+      } else if (m.to.location === 'home') {
+        const key = `hm-${mover.color}-${m.to.homeStep}`
+        if (seen.has(key)) continue
+        seen.add(key)
+        const cell = HOME_PATH[mover.color][Math.min(m.to.homeStep, 5) - 1]
+        out.push({ key, x: ((cell.c + 0.5) / BOARD_SIZE) * 100, y: ((cell.r + 0.5) / BOARD_SIZE) * 100, pair: false, finish: false })
+      } else if (m.to.location === 'finished') {
+        const key = 'fin'
+        if (seen.has(key)) continue
+        seen.add(key)
+        out.push({ key, x: 50, y: 50, pair: false, finish: true })
+      }
+    }
+    return out
+  }, [game, animating])
 
   // capture FX — a knockout plays THREE beats: impact burst at the cell
   // where the pawn was hit, the victim pawn flying back to its yard in
@@ -505,6 +568,66 @@ export default function Board({
                   </svg>
                 )}
               </div>
+            )
+          })}
+
+          {/* locked-pair badges: owner-colored ring + gold padlock on the corner */}
+          {locks.map((l) => {
+            const cell = TRACK[l.idx]
+            const c = COLOR_HEX[l.color]
+            return (
+              <div
+                key={`lock-${l.idx}`}
+                className="pointer-events-none absolute"
+                style={{ left: pct(cell.c), top: pct(cell.r), width: pct(1), height: pct(1), zIndex: 6 }}
+              >
+                <span
+                  className="ls-lock-ring absolute inset-[-9%] rounded-[26%]"
+                  style={{
+                    border: `2px solid ${c.light}`,
+                    boxShadow: `0 0 7px 1.5px ${c.glow}, inset 0 0 5px ${c.glow}`,
+                  }}
+                />
+                <span
+                  className="absolute"
+                  style={{ left: '-9%', top: '-9%', width: '56%', height: '56%' }}
+                >
+                  <PadlockGlyph />
+                </span>
+              </div>
+            )
+          })}
+
+          {/* move preview: pulsing ring on every cell the turn player can reach */}
+          {destinations.map((d) => {
+            const c = COLOR_HEX[turnColor]
+            return (
+              <span
+                key={`dst-${d.key}`}
+                className="ls-dest-marker pointer-events-none absolute grid place-items-center rounded-full"
+                style={{
+                  left: pct(d.x),
+                  top: pct(d.y),
+                  width: pct(d.finish ? 1.5 : 0.82),
+                  height: pct(d.finish ? 1.5 : 0.82),
+                  border: d.finish ? '2.5px solid #ffd977' : `2.5px solid ${c.main}`,
+                  background: d.finish ? 'rgba(255,217,119,0.14)' : `${c.main}22`,
+                  boxShadow: `0 0 10px 2px ${d.finish ? 'rgba(246,196,83,0.6)' : c.glow}, inset 0 0 6px ${d.finish ? 'rgba(246,196,83,0.4)' : c.glow}`,
+                  zIndex: 7,
+                }}
+              >
+                {d.pair && <span className="h-[62%] w-[62%]"><PadlockGlyph scale={0.9} /></span>}
+                {d.finish && (
+                  <svg viewBox="0 0 24 24" className="h-[58%] w-[58%]">
+                    <path
+                      d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"
+                      fill="#ffe08a"
+                      stroke="#fff7d9"
+                      strokeWidth="1"
+                    />
+                  </svg>
+                )}
+              </span>
             )
           })}
 
