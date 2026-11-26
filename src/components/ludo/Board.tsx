@@ -212,18 +212,19 @@ export default function Board({
         seen.add(key)
         const cell = TRACK[m.to.trackIdx]
         const ownBefore = mover.tokens.filter((t) => t.location === 'track' && t.trackIdx === m.to.trackIdx).length
-        out.push({ key, x: ((cell.c + 0.5) / BOARD_SIZE) * 100, y: ((cell.r + 0.5) / BOARD_SIZE) * 100, pair: ownBefore >= 1, finish: false })
+        // NOTE: x/y are CELL UNITS (pct() divides by BOARD_SIZE), not percent
+        out.push({ key, x: cell.c + 0.5, y: cell.r + 0.5, pair: ownBefore >= 1, finish: false })
       } else if (m.to.location === 'home') {
         const key = `hm-${mover.color}-${m.to.homeStep}`
         if (seen.has(key)) continue
         seen.add(key)
         const cell = HOME_PATH[mover.color][Math.min(m.to.homeStep, 5) - 1]
-        out.push({ key, x: ((cell.c + 0.5) / BOARD_SIZE) * 100, y: ((cell.r + 0.5) / BOARD_SIZE) * 100, pair: false, finish: false })
+        out.push({ key, x: cell.c + 0.5, y: cell.r + 0.5, pair: false, finish: false })
       } else if (m.to.location === 'finished') {
         const key = 'fin'
         if (seen.has(key)) continue
         seen.add(key)
-        out.push({ key, x: 50, y: 50, pair: false, finish: true })
+        out.push({ key, x: 7.5, y: 7.5, pair: false, finish: true })
       }
     }
     return out
