@@ -503,12 +503,12 @@ export default function MenuScreen() {
         <main className="relative flex min-h-0 flex-1 flex-col px-3">
           {/* ============ HERO ZONE — emblem + wordmark centered; the four side icons
                (daily reward / leaderboard / friends / shop) sit at the TOP corners
-               of the hero, directly AFTER the header + profile avatar row. ============ */}
+               of the hero, 40px BELOW the header + profile avatar row. ============ */}
           {/* HERO (5) vs MIDDLE (6): boxes stay centered in the middle zone. */}
           <div className="relative z-10 flex min-h-0 flex-[5] flex-col items-center justify-center pt-3">
 
             {/* side icon rails — just after the header + profile avatar row */}
-            <div className="absolute left-0 top-0 z-20 flex flex-col gap-2.5">
+            <div className="absolute left-0 top-10 z-20 flex flex-col gap-2.5">
               <SideRailButton label={tr('dailyReward')} tone="gold" badge={dailyClaimable ? 1 : 0} onClick={() => setTab('chest')}>
                 <Gift size={20} />
               </SideRailButton>
@@ -516,7 +516,7 @@ export default function MenuScreen() {
                 <Trophy size={20} />
               </SideRailButton>
             </div>
-            <div className="absolute right-0 top-0 z-20 flex flex-col gap-2.5">
+            <div className="absolute right-0 top-10 z-20 flex flex-col gap-2.5">
               <SideRailButton label={tr('friends')} tone="green" dot={onlineFriends > 0 ? '#4ade80' : undefined} onClick={() => setTab('friends')}>
                 <Users size={20} />
               </SideRailButton>
@@ -526,10 +526,10 @@ export default function MenuScreen() {
             </div>
 
             {/* dice & pawns flanking the emblem (kept clear of the top rails) */}
-            <div className="ls-float-a pointer-events-none absolute left-3 top-[54%] z-0" aria-hidden>
+            <div className="ls-float-a pointer-events-none absolute left-14 top-[54%] z-0" aria-hidden>
               <DecoDie value={5} size={28} tilt={14} />
             </div>
-            <div className="ls-float-b pointer-events-none absolute right-4 top-[58%] z-0" aria-hidden>
+            <div className="ls-float-b pointer-events-none absolute right-14 top-[58%] z-0" aria-hidden>
               <DecoDie value={3} size={22} tilt={-12} />
             </div>
             <div className="pointer-events-none absolute left-6 bottom-[6%] z-0" aria-hidden>
@@ -558,8 +558,8 @@ export default function MenuScreen() {
           {/* ============ MIDDLE — play boxes centered with clear space between
               them. Columns 14px apart; rows 20px apart on tall phones
               (16px on short phones where the zone is tight). On tall phones
-              the boxes are also a touch taller — capped below their own width
-              (min(34vw,17vh,132px) < half-width at every phone size).
+              the boxes grow another step taller — still capped below their
+              own width (min(36vw,17vh,140px) < half-width at every size).
               mb-7 keeps the breathing gap above the bottom nav. ============ */}
           <div className="relative z-10 mb-7 flex min-h-0 flex-[6] items-center">
 
@@ -567,7 +567,7 @@ export default function MenuScreen() {
             <div className="flex min-w-0 flex-1 flex-col gap-4 [@media(min-height:700px)]:gap-5">
 
           {/* first row — 2 PLAYER + PRIVATE TABLE */}
-          <div className="grid h-[min(30vw,17vh,124px)] grid-cols-2 gap-3.5 [@media(min-height:700px)]:h-[min(34vw,17vh,132px)]">
+          <div className="grid h-[min(30vw,17vh,124px)] grid-cols-2 gap-3.5 [@media(min-height:700px)]:h-[min(36vw,17vh,140px)]">
             <button
               onClick={() => { setSheet('table2'); setSheetMode('classic'); sfx.click() }}
               className="ls-tile-gold ls-shine ls-rise relative flex h-full min-h-[88px] flex-col overflow-hidden rounded-2xl p-1.5"
@@ -600,7 +600,7 @@ export default function MenuScreen() {
           </div>
 
           {/* second row — 4 PLAYER (blue, same-to-same) + OFFLINE */}
-          <div className="grid h-[min(30vw,17vh,124px)] grid-cols-2 gap-3.5 [@media(min-height:700px)]:h-[min(34vw,17vh,132px)]">
+          <div className="grid h-[min(30vw,17vh,124px)] grid-cols-2 gap-3.5 [@media(min-height:700px)]:h-[min(36vw,17vh,140px)]">
             <button
               onClick={() => { setSheet('table4'); setSheetMode('classic'); sfx.click() }}
               className="ls-tile-blue ls-shine ls-rise relative flex h-full min-h-[88px] flex-col overflow-hidden rounded-2xl p-1.5"
