@@ -471,12 +471,14 @@ export default function MenuScreen() {
           </div>
 
           {/* ============ MIDDLE — play boxes centered, icon rails flanking LEFT/RIGHT
-              (classic Ludo Star lobby): boxes sit in the vertical middle, rails keep
-              their sides. Boxes stay wide-format via min(30vw,17vh,124px) rows.
-              mb-7 keeps the clear breathing gap above the bottom nav. ============ */}
-          <div className="relative z-10 mb-7 flex min-h-0 flex-[6] items-center gap-2">
+              (classic Ludo Star lobby): boxes sit in the vertical middle and the rails
+              stay on their sides but are TOP-ALIGNED with the card stack, sitting
+              beside the top card row (items-start). Boxes stay wide-format via
+              min(30vw,17vh,124px) rows. mb-7 keeps the clear breathing gap above
+              the bottom nav. ============ */}
+          <div className="relative z-10 mb-7 flex min-h-0 flex-[6] items-start gap-2">
 
-            {/* left rail — same side as always */}
+            {/* left rail — same side as always, raised to the top of the card stack */}
             <div className="flex shrink-0 flex-col gap-2.5">
               <SideRailButton label={tr('dailyReward')} tone="gold" badge={dailyClaimable ? 1 : 0} onClick={() => setTab('chest')}>
                 <Gift size={20} />
@@ -556,7 +558,7 @@ export default function MenuScreen() {
           </div>
             </div>
 
-            {/* right rail — same side as always */}
+            {/* right rail — same side as always, raised to the top of the card stack */}
             <div className="flex shrink-0 flex-col gap-2.5">
               <SideRailButton label={tr('friends')} tone="green" dot={onlineFriends > 0 ? '#4ade80' : undefined} onClick={() => setTab('friends')}>
                 <Users size={20} />
