@@ -555,16 +555,19 @@ export default function MenuScreen() {
             </div>
           </div>
 
-          {/* ============ MIDDLE — play boxes centered, now full-width with clear
-              space and margin between them (16px between rows, 12px between
-              columns). mb-7 keeps the breathing gap above the bottom nav. ============ */}
+          {/* ============ MIDDLE — play boxes centered with clear space between
+              them. Columns 14px apart; rows 20px apart on tall phones
+              (16px on short phones where the zone is tight). On tall phones
+              the boxes are also a touch taller — capped below their own width
+              (min(34vw,17vh,132px) < half-width at every phone size).
+              mb-7 keeps the breathing gap above the bottom nav. ============ */}
           <div className="relative z-10 mb-7 flex min-h-0 flex-[6] items-center">
 
             {/* play boxes (2x2, centered, spaced) */}
-            <div className="flex min-w-0 flex-1 flex-col gap-4">
+            <div className="flex min-w-0 flex-1 flex-col gap-4 [@media(min-height:700px)]:gap-5">
 
           {/* first row — 2 PLAYER + PRIVATE TABLE */}
-          <div className="grid h-[min(30vw,17vh,124px)] grid-cols-2 gap-3">
+          <div className="grid h-[min(30vw,17vh,124px)] grid-cols-2 gap-3.5 [@media(min-height:700px)]:h-[min(34vw,17vh,132px)]">
             <button
               onClick={() => { setSheet('table2'); setSheetMode('classic'); sfx.click() }}
               className="ls-tile-gold ls-shine ls-rise relative flex h-full min-h-[88px] flex-col overflow-hidden rounded-2xl p-1.5"
@@ -597,7 +600,7 @@ export default function MenuScreen() {
           </div>
 
           {/* second row — 4 PLAYER (blue, same-to-same) + OFFLINE */}
-          <div className="grid h-[min(30vw,17vh,124px)] grid-cols-2 gap-3">
+          <div className="grid h-[min(30vw,17vh,124px)] grid-cols-2 gap-3.5 [@media(min-height:700px)]:h-[min(34vw,17vh,132px)]">
             <button
               onClick={() => { setSheet('table4'); setSheetMode('classic'); sfx.click() }}
               className="ls-tile-blue ls-shine ls-rise relative flex h-full min-h-[88px] flex-col overflow-hidden rounded-2xl p-1.5"
