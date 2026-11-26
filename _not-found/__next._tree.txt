@@ -1,4 +1,4 @@
 :HL["/Ludo-browser/_next/static/chunks/5a5d728b2dd476b7.css","style"]
-:HL["/Ludo-browser/_next/static/chunks/f8d87da79fef686f.css","style"]
+:HL["/Ludo-browser/_next/static/chunks/9905df3c7b7f5fed.css","style"]
 :HL["/Ludo-browser/_next/static/chunks/08a47d0f2d78eb6f.css","style"]
-0:{"buildId":"lTbjM70P0ci0Wn61GzsM6","tree":{"name":"","paramType":null,"paramKey":"","hasRuntimePrefetch":false,"slots":{"children":{"name":"/_not-found","paramType":null,"paramKey":"/_not-found","hasRuntimePrefetch":false,"slots":{"children":{"name":"__PAGE__","paramType":null,"paramKey":"__PAGE__","hasRuntimePrefetch":false,"slots":null,"isRootLayout":false}},"isRootLayout":false}},"isRootLayout":true},"staleTime":300}
+0:{"buildId":"PbkcMEIMnZ5edIWAJK5ES","tree":{"name":"","paramType":null,"paramKey":"","hasRuntimePrefetch":false,"slots":{"children":{"name":"/_not-found","paramType":null,"paramKey":"/_not-found","hasRuntimePrefetch":false,"slots":{"children":{"name":"__PAGE__","paramType":null,"paramKey":"__PAGE__","hasRuntimePrefetch":false,"slots":null,"isRootLayout":false}},"isRootLayout":false}},"isRootLayout":true},"staleTime":300}
