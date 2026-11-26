@@ -114,6 +114,13 @@ const EN: Dict = {
   toLevel: 'to level',
   freeRefillBtn: 'GET 5,000 FREE',
   recorded: 'recorded',
+  // pages (full-screen lobby pages)
+  shopSub: 'Free coins, gems & rewards',
+  friendsSub: 'See who is online and play together',
+  profileSub: 'Your stats, avatar & achievements',
+  chestSub: 'Open daily — rewards grow all week',
+  today: 'TODAY',
+  inviteTitle: 'INVITE FRIENDS',
 }
 
 const UR: Dict = {
@@ -207,6 +214,12 @@ const UR: Dict = {
   toLevel: 'لیول تک',
   freeRefillBtn: '5,000 مفت لیں',
   recorded: 'ریکارڈ',
+  shopSub: 'مفت سکے، جیولز اور انعامات',
+  friendsSub: 'دیکھیں کون آن لائن ہے — ساتھ کھیلیں',
+  profileSub: 'آپ کے اعداد و شمار، اوتار اور کامیابیاں',
+  chestSub: 'روز کھولیں — انعام ہفتے بھر بڑتا ہے',
+  today: 'آج',
+  inviteTitle: 'دوستوں کو بُلائیں',
 }
 
 const HI: Dict = {
@@ -300,6 +313,12 @@ const HI: Dict = {
   toLevel: 'लेवल तक',
   freeRefillBtn: '5,000 मुफ़्त लें',
   recorded: 'रिकॉर्ड',
+  shopSub: 'मुफ़्त सिक्के, जेम्स और इनाम',
+  friendsSub: 'देखें कौन ऑनलाइन है — साथ खेलें',
+  profileSub: 'आपके आंकड़े, अवतार और उपलब्धियां',
+  chestSub: 'रोज़ खोलें — इनाम पूरे हफ़्ते बढ़ता है',
+  today: 'आज',
+  inviteTitle: 'दोस्तों को बुलाएं',
 }
 
 const DICTS: Record<Lang, Dict> = { en: EN, ur: UR, hi: HI }
