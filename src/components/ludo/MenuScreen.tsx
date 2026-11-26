@@ -354,6 +354,15 @@ export default function MenuScreen() {
     return <BootScreen />
   }
 
+  // shared anatomy for the play-mode dialogs (same header style as the lobby pages)
+  const sheetMeta: Record<Exclude<SheetKind, null>, { title: string; sub: string; art: React.ReactNode }> = {
+    table2: { title: tr('twoPlayer'), sub: tr('oneVOne'), art: <Art2P /> },
+    table4: { title: tr('fourPlayer'), sub: tr('fourSeats'), art: <Art4P /> },
+    private: { title: tr('privateTable'), sub: tr('roomWithFriends'), art: <ArtPrivate /> },
+    offline: { title: tr('offline'), sub: tr('playInstant'), art: <ArtOffline /> },
+  }
+  const meta = sheet ? sheetMeta[sheet] : null
+
   return (
     <div className="ls-bg-lobby fixed inset-0 z-0 overflow-y-auto overflow-x-hidden">
       {/* desktop ambience outside the phone column */}
@@ -492,24 +501,41 @@ export default function MenuScreen() {
 
         {/* ============ MAIN (LUDO hero + play tiles) ============ */}
         <main className="relative flex min-h-0 flex-1 flex-col px-3">
-          {/* ============ HERO ZONE — emblem + wordmark centered at the top area,
-               gold crown on the board, dice & pawns flanking it. The four side icons
-               flank the PLAY BOXES below (classic Ludo Star lobby). ============ */}
-          {/* HERO (5) vs MIDDLE (6): boxes sit centered in the middle zone with the
-              icon rails beside them; vh caps keep short windows safe. */}
-          <div className="relative z-10 flex min-h-0 flex-[5] flex-col items-center justify-center pt-4">
+          {/* ============ HERO ZONE — emblem + wordmark centered; the four side icons
+               (daily reward / leaderboard / friends / shop) sit at the TOP corners
+               of the hero, directly AFTER the header + profile avatar row. ============ */}
+          {/* HERO (5) vs MIDDLE (6): boxes stay centered in the middle zone. */}
+          <div className="relative z-10 flex min-h-0 flex-[5] flex-col items-center justify-center pt-3">
 
-            {/* dice & pawns flanking the emblem (composited transform-only float) */}
-            <div className="ls-float-a pointer-events-none absolute left-3 top-[6%] z-0" aria-hidden>
+            {/* side icon rails — just after the header + profile avatar row */}
+            <div className="absolute left-0 top-0 z-20 flex flex-col gap-2.5">
+              <SideRailButton label={tr('dailyReward')} tone="gold" badge={dailyClaimable ? 1 : 0} onClick={() => setTab('chest')}>
+                <Gift size={20} />
+              </SideRailButton>
+              <SideRailButton label={tr('winStars')} tone="purple" onClick={() => setPage('ranks')}>
+                <Trophy size={20} />
+              </SideRailButton>
+            </div>
+            <div className="absolute right-0 top-0 z-20 flex flex-col gap-2.5">
+              <SideRailButton label={tr('friends')} tone="green" dot={onlineFriends > 0 ? '#4ade80' : undefined} onClick={() => setTab('friends')}>
+                <Users size={20} />
+              </SideRailButton>
+              <SideRailButton label={tr('shop')} tone="blue" onClick={() => setTab('shop')}>
+                <ShoppingBag size={20} />
+              </SideRailButton>
+            </div>
+
+            {/* dice & pawns flanking the emblem (kept clear of the top rails) */}
+            <div className="ls-float-a pointer-events-none absolute left-3 top-[54%] z-0" aria-hidden>
               <DecoDie value={5} size={28} tilt={14} />
             </div>
-            <div className="ls-float-b pointer-events-none absolute right-4 top-[10%] z-0" aria-hidden>
+            <div className="ls-float-b pointer-events-none absolute right-4 top-[58%] z-0" aria-hidden>
               <DecoDie value={3} size={22} tilt={-12} />
             </div>
-            <div className="pointer-events-none absolute left-7 top-[26%] z-0" aria-hidden>
+            <div className="pointer-events-none absolute left-6 bottom-[6%] z-0" aria-hidden>
               <DecoToken color="red" size={20} />
             </div>
-            <div className="ls-float-b pointer-events-none absolute right-7 top-[40%] z-0" aria-hidden>
+            <div className="ls-float-b pointer-events-none absolute right-6 bottom-[8%] z-0" aria-hidden>
               <DecoToken color="blue" size={18} />
             </div>
 
@@ -529,29 +555,16 @@ export default function MenuScreen() {
             </div>
           </div>
 
-          {/* ============ MIDDLE — play boxes centered, icon rails flanking LEFT/RIGHT
-              (classic Ludo Star lobby): boxes stay centered in the middle zone and the
-              rails keep their sides; each rail is sized to the card-stack height
-              (2 rows + gap) so its icons TOP-ALIGN with the top card row — beside the
-              cards and raised, not floating at mid-height. mb-7 keeps the clear
-              breathing gap above the bottom nav. ============ */}
-          <div className="relative z-10 mb-7 flex min-h-0 flex-[6] items-center gap-2">
+          {/* ============ MIDDLE — play boxes centered, now full-width with clear
+              space and margin between them (16px between rows, 12px between
+              columns). mb-7 keeps the breathing gap above the bottom nav. ============ */}
+          <div className="relative z-10 mb-7 flex min-h-0 flex-[6] items-center">
 
-            {/* left rail — same side as always, raised to the top of the card stack */}
-            <div className="flex h-[calc(min(30vw,17vh,124px)*2_+_10px)] shrink-0 flex-col gap-2.5">
-              <SideRailButton label={tr('dailyReward')} tone="gold" badge={dailyClaimable ? 1 : 0} onClick={() => setTab('chest')}>
-                <Gift size={20} />
-              </SideRailButton>
-              <SideRailButton label={tr('winStars')} tone="purple" onClick={() => setPage('ranks')}>
-                <Trophy size={20} />
-              </SideRailButton>
-            </div>
-
-            {/* play boxes (2x2, centered) */}
-            <div className="flex min-w-0 flex-1 flex-col gap-2.5">
+            {/* play boxes (2x2, centered, spaced) */}
+            <div className="flex min-w-0 flex-1 flex-col gap-4">
 
           {/* first row — 2 PLAYER + PRIVATE TABLE */}
-          <div className="grid h-[min(30vw,17vh,124px)] grid-cols-2 gap-2.5">
+          <div className="grid h-[min(30vw,17vh,124px)] grid-cols-2 gap-3">
             <button
               onClick={() => { setSheet('table2'); setSheetMode('classic'); sfx.click() }}
               className="ls-tile-gold ls-shine ls-rise relative flex h-full min-h-[88px] flex-col overflow-hidden rounded-2xl p-1.5"
@@ -584,7 +597,7 @@ export default function MenuScreen() {
           </div>
 
           {/* second row — 4 PLAYER (blue, same-to-same) + OFFLINE */}
-          <div className="grid h-[min(30vw,17vh,124px)] grid-cols-2 gap-2.5">
+          <div className="grid h-[min(30vw,17vh,124px)] grid-cols-2 gap-3">
             <button
               onClick={() => { setSheet('table4'); setSheetMode('classic'); sfx.click() }}
               className="ls-tile-blue ls-shine ls-rise relative flex h-full min-h-[88px] flex-col overflow-hidden rounded-2xl p-1.5"
@@ -615,16 +628,6 @@ export default function MenuScreen() {
               </div>
             </button>
           </div>
-            </div>
-
-            {/* right rail — same side as always, raised to the top of the card stack */}
-            <div className="flex h-[calc(min(30vw,17vh,124px)*2_+_10px)] shrink-0 flex-col gap-2.5">
-              <SideRailButton label={tr('friends')} tone="green" dot={onlineFriends > 0 ? '#4ade80' : undefined} onClick={() => setTab('friends')}>
-                <Users size={20} />
-              </SideRailButton>
-              <SideRailButton label={tr('shop')} tone="blue" onClick={() => setTab('shop')}>
-                <ShoppingBag size={20} />
-              </SideRailButton>
             </div>
           </div>
         </main>
@@ -1035,33 +1038,48 @@ export default function MenuScreen() {
         )}
       </AnimatePresence>
 
-      {/* ============ SHEETS (table setup / private — contextual mode pickers) ============ */}
+      {/* ============ PLAY-MODE DIALOGS (2P / 4P / private / offline) ============
+          Same anatomy as the lobby pages (gold back button + big title +
+          one-line description) but presented as a CENTERED CARD — clearly
+          SHORTER than the screen; the lobby stays visible behind a dimmed
+          backdrop and slides in from the right like the pages. ============ */}
       <AnimatePresence>
-        {sheet && (
+        {sheet && meta && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-50">
             <div className="absolute inset-0 bg-black/55" onClick={() => setSheet(null)} />
             <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-              className="absolute inset-x-0 bottom-0 mx-auto w-full max-w-[430px]"
+              initial={{ opacity: 0, x: 44, scale: 0.96 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: 44, scale: 0.96 }}
+              transition={{ type: 'tween', duration: 0.24, ease: [0.32, 0.72, 0, 1] }}
+              className="pointer-events-none absolute inset-0 grid place-items-center p-4"
             >
-              <div className="ls-sheet ls-scroll max-h-[72vh] overflow-y-auto rounded-t-3xl p-4 pb-6">
-                <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/25" />
+              <div className="ls-sheet pointer-events-auto max-h-[82vh] w-full max-w-[400px] overflow-y-auto rounded-3xl p-4 pb-6">
+
+                {/* page-style header: back + title + description + art */}
+                <div className="mb-3 flex items-center gap-3">
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => { setSheet(null); sfx.click() }}
+                    className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-white"
+                    style={{
+                      background: 'linear-gradient(180deg,#ff9d3c,#e8720c)',
+                      boxShadow: '0 3px 0 #93440a, 0 8px 18px rgba(10,2,30,0.45), inset 0 2px 0 rgba(255,255,255,0.45)',
+                    }}
+                    aria-label="Back"
+                  >
+                    <ArrowLeft size={20} />
+                  </motion.button>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="ls-font truncate text-lg leading-tight text-white">{meta.title}</h3>
+                    <p className="truncate text-[10px] text-fuchsia-100/60">{meta.sub}</p>
+                  </div>
+                  <div className="h-11 w-11 shrink-0">{meta.art}</div>
+                </div>
 
                 {/* ---- TABLE SHEET (2 / 4 player) ---- */}
                 {(sheet === 'table2' || sheet === 'table4') && (
                   <div>
-                    <div className="mb-3 flex items-center gap-2.5">
-                      <div className="h-11 w-11">{sheet === 'table2' ? <Art2P /> : <Art4P />}</div>
-                      <div>
-                        <h3 className="ls-font text-lg leading-tight text-white">{sheet === 'table2' ? tr('twoPlayer') : tr('fourPlayer')}</h3>
-                        <p className="text-[10px] text-fuchsia-100/60">
-                          {sheet === 'table2' ? tr('oneVOne') : tr('fourSeats')}
-                        </p>
-                      </div>
-                    </div>
 
                     <p className="ls-font mb-1.5 text-[10px] tracking-wide text-amber-200">{tr('gameType')}</p>
                     <div className="grid grid-cols-3 gap-1.5">
@@ -1141,13 +1159,6 @@ export default function MenuScreen() {
                 {/* ---- PRIVATE TABLE SHEET ---- */}
                 {sheet === 'private' && (
                   <div>
-                    <div className="mb-3 flex items-center gap-2.5">
-                      <div className="h-11 w-11"><ArtPrivate /></div>
-                      <div>
-                        <h3 className="ls-font text-lg leading-tight text-white">{tr('privateTable')}</h3>
-                        <p className="text-[10px] text-fuchsia-100/60">{tr('roomWithFriends')}</p>
-                      </div>
-                    </div>
 
                     <p className="ls-font mb-1.5 text-[10px] tracking-wide text-amber-200">{tr('entryStake')}</p>
                     <div className="grid grid-cols-4 gap-1.5">
@@ -1219,13 +1230,6 @@ export default function MenuScreen() {
                 {/* ---- OFFLINE SHEET ---- */}
                 {sheet === 'offline' && (
                   <div>
-                    <div className="mb-3 flex items-center gap-2.5">
-                      <div className="h-11 w-11"><ArtOffline /></div>
-                      <div>
-                        <h3 className="ls-font text-lg leading-tight text-white">{tr('offline')}</h3>
-                        <p className="text-[10px] text-fuchsia-100/60">{tr('playInstant')}</p>
-                      </div>
-                    </div>
 
                     <p className="ls-font mb-1.5 text-[10px] tracking-wide text-amber-200">{tr('gameType')}</p>
                     <div className="grid grid-cols-3 gap-1.5">
